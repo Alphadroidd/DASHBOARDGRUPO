@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#25d366">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CC Dashboard">
+<meta name="description" content="Dashboard do grupo Compra Certa, Fatura Incerta">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>💳 CC Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;min-height:100dvh}
+
+/* ===== TELA DE LOGIN ===== */
+#login-screen{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#0d1117 0%,#1a2332 50%,#0d1117 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;
+}
+.login-box{
+  background:#161b22;border:1px solid #30363d;border-radius:20px;
+  padding:36px 28px;width:100%;max-width:360px;text-align:center;
+  box-shadow:0 20px 60px #00000060;
+}
+.login-logo{font-size:52px;margin-bottom:12px;display:block}
+.login-title{font-size:20px;font-weight:800;color:#25d366;margin-bottom:4px}
+.login-sub{font-size:12px;color:#484f58;margin-bottom:28px}
+.login-label{display:block;text-align:left;font-size:11px;color:#8b949e;font-weight:600;margin-bottom:6px;letter-spacing:.5px}
+.login-input{
+  width:100%;background:#21262d;border:1px solid #30363d;border-radius:10px;
+  padding:13px 16px;color:#e6edf3;font-size:16px;outline:none;
+  transition:.2s;letter-spacing:2px;
+}
+.login-input:focus{border-color:#25d366;box-shadow:0 0 0 3px #25d36620}
+.login-btn{
+  width:100%;margin-top:16px;background:#25d366;border:none;border-radius:10px;
+  padding:14px;color:#000;font-size:15px;font-weight:700;cursor:pointer;
+  transition:.2s;
+}
+.login-btn:hover{background:#20b858}
+.login-btn:active{transform:scale(.98)}
+.login-error{
+  margin-top:12px;padding:10px 14px;background:#3d1f1f;border:1px solid #f8514940;
+  border-radius:8px;font-size:12px;color:#f85149;display:none;
+}
+.login-hint{margin-top:20px;font-size:11px;color:#30363d}
+
+/* ===== APP ===== */
+#app{display:none;flex-direction:column;min-height:100vh;min-height:100dvh}
+
+.topbar{
+  background:#161b22;border-bottom:1px solid #30363d;
+  padding:12px 16px;display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:100;
+  padding-top:max(12px, env(safe-area-inset-top));
+}
+.topbar-logo{font-size:24px}
+.topbar-info{flex:1}
+.topbar-info h1{font-size:14px;font-weight:700;color:#25d366;line-height:1.2}
+.topbar-info .sub{font-size:10px;color:#484f58}
+.logout-btn{
+  background:#3d1f1f;border:1px solid #f8514920;border-radius:8px;
+  padding:6px 12px;color:#f85149;font-size:11px;font-weight:600;cursor:pointer;
+}
+
+.main{padding:14px;flex:1;max-width:980px;margin:0 auto;width:100%;
+  padding-bottom:max(80px,calc(60px + env(safe-area-inset-bottom)))}
+
+/* Cards */
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+@media(min-width:480px){.cards{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:700px){.cards{grid-template-columns:repeat(5,1fr)}}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px 10px;text-align:center}
+.card .num{font-size:24px;font-weight:800;margin-bottom:2px}
+.card .lbl{font-size:10px;color:#8b949e;line-height:1.3}
+.card .sub{font-size:9px;color:#484f58;margin-top:2px}
+.c-green{border-color:#25d36650}.c-green .num{color:#25d366}
+.c-red{border-color:#f8514950}.c-red .num{color:#f85149}
+.c-blue{border-color:#388bfd50}.c-blue .num{color:#388bfd}
+.c-purple{border-color:#bc8cff50}.c-purple .num{color:#bc8cff}
+.c-orange{border-color:#d2930050}.c-orange .num{color:#d29300}
+
+/* Bottom nav (mobile) */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:#161b22;border-top:1px solid #30363d;
+  display:flex;
+  padding-bottom:max(8px,env(safe-area-inset-bottom));
+}
+.bnav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  padding:8px 4px;cursor:pointer;color:#484f58;font-size:9px;gap:3px;
+  transition:.15s;border:none;background:none;
+}
+.bnav-btn .icon{font-size:18px;line-height:1}
+.bnav-btn.active{color:#25d366}
+.bnav-btn:active{background:#21262d20}
+
+/* Desktop tabs */
+.desk-tabs{display:none}
+@media(min-width:700px){
+  .bottom-nav{display:none}
+  .desk-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+  .main{padding-bottom:16px}
+}
+.tab{padding:8px 14px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #30363d;background:#161b22;color:#8b949e;transition:.15s}
+.tab.active{background:#1a4731;color:#25d366;border-color:#25d36660}
+.tab:hover:not(.active){color:#e6edf3;border-color:#8b949e}
+
+/* Panels */
+.panel{display:none}.panel.active{display:block}
+.section{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px;margin-bottom:12px}
+.section h2{font-size:13px;font-weight:700;color:#e6edf3;margin-bottom:10px}
+
+/* Search & filters */
+.search-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.sb{flex:1;min-width:140px;background:#21262d;border:1px solid #30363d;border-radius:8px;padding:9px 12px;color:#e6edf3;font-size:14px;outline:none}
+.sb:focus{border-color:#25d366}
+.sb::placeholder{color:#484f58}
+select.sf{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:9px 8px;color:#e6edf3;font-size:12px;outline:none;cursor:pointer;max-width:140px}
+.count-info{font-size:11px;color:#484f58;margin-bottom:8px}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;max-height:400px;overflow-y:auto}
+.tbl-wrap::-webkit-scrollbar{width:3px;height:3px}
+.tbl-wrap::-webkit-scrollbar-thumb{background:#388bfd;border-radius:2px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#21262d;color:#8b949e;padding:8px 10px;text-align:left;position:sticky;top:0;font-weight:600;font-size:11px;border-bottom:1px solid #30363d;white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid #1a1f27;vertical-align:middle}
+tr:hover td{background:#21262d40}
+.av{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;vertical-align:middle}
+.badge{padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;white-space:nowrap}
+.b-green{background:#1a4731;color:#25d366}
+.b-red{background:#3d1f1f;color:#f85149}
+.b-orange{background:#3d2e00;color:#d29300}
+.b-blue{background:#1a2d4a;color:#388bfd}
+.b-purple{background:#2d1a4a;color:#bc8cff}
+.b-teal{background:#0d2d2d;color:#39d3c3}
+.nc{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Export btn */
+.ebtn{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:8px 14px;color:#e6edf3;font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap}
+.ebtn:hover{border-color:#25d366;color:#25d366}
+.ebtn:active{transform:scale(.97)}
+
+/* Charts */
+.bar-chart{display:flex;flex-direction:column;gap:5px}
+.bar-row{display:flex;align-items:center;gap:6px}
+.bar-lbl{font-size:10px;color:#8b949e;width:66px;text-align:right;flex-shrink:0}
+.bar-wrap{flex:1;background:#21262d;border-radius:4px;height:18px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:5px;font-size:9px;font-weight:700;color:#fff;min-width:18px}
+
+/* Grid stats */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.mini{background:#21262d;border-radius:10px;padding:12px;text-align:center}
+.mini .n{font-size:20px;font-weight:800}
+.mini .l{font-size:10px;color:#8b949e;margin-top:2px}
+
+/* Alerts & tips */
+.alert{background:#3d1f1f;border:1px solid #f8514920;border-radius:8px;padding:10px 12px;font-size:12px;color:#f85149;margin-bottom:8px;display:flex;gap:8px}
+.tip{background:#21262d;border-radius:8px;padding:12px;font-size:12px;margin-bottom:8px}
+
+/* Install banner */
+#install-banner{
+  display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);
+  background:#25d366;color:#000;border-radius:12px;padding:12px 20px;
+  font-size:13px;font-weight:700;cursor:pointer;z-index:200;
+  box-shadow:0 4px 20px #25d36640;white-space:nowrap;
+}
+@media(min-width:700px){#install-banner{bottom:20px}}
+</style>
+</head>
+<body>
+
+<!-- ===== TELA DE LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-box">
+    <span class="login-logo">💳</span>
+    <div class="login-title">Compra Certa</div>
+    <div class="login-sub">Fatura Incerta · Dashboard Privado</div>
+    <label class="login-label">SENHA DE ACESSO</label>
+    <input class="login-input" type="password" id="login-input" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password"/>
+    <button class="login-btn" onclick="doLogin()">🔓 Entrar</button>
+    <div class="login-error" id="login-error">❌ Senha incorreta. Tente novamente.</div>
+    <div class="login-hint">Dashboard privado · Acesso restrito</div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+
+<div class="topbar">
+  <div class="topbar-logo">💳</div>
+  <div class="topbar-info">
+    <h1>Compra Certa, Fatura Incerta</h1>
+    <div class="sub">Dashboard · 27/06/2026</div>
+  </div>
+  <button class="logout-btn" onclick="doLogout()">Sair</button>
+</div>
+
+<div class="main">
+
+  <!-- CARDS -->
+  <div class="cards">
+    <div class="card c-blue"><div class="num">623</div><div class="lbl">👥 Já passaram</div><div class="sub">total histórico</div></div>
+    <div class="card c-green"><div class="num">280</div><div class="lbl">✅ Ativos hoje</div><div class="sub">93 nomeados + 187 sem nome</div></div>
+    <div class="card c-red"><div class="num">343</div><div class="lbl">🚪 Saíram</div><div class="sub">60 dias</div></div>
+    <div class="card c-orange"><div class="num">404</div><div class="lbl">📥 Entraram</div><div class="sub">desde 09/05</div></div>
+    <div class="card c-purple"><div class="num">14</div><div class="lbl">🔄 Retornaram</div><div class="sub">identificados</div></div>
+  </div>
+
+  <!-- TABS (desktop) -->
+  <div class="desk-tabs">
+    <button class="tab active" onclick="showTab('stats',this)">📊 Estatísticas</button>
+    <button class="tab" onclick="showTab('ativos',this)">✅ Ativos</button>
+    <button class="tab" onclick="showTab('entradas',this)">📥 Entradas</button>
+    <button class="tab" onclick="showTab('saidas',this)">🚪 Saídas</button>
+    <button class="tab" onclick="showTab('retornos',this)">🔄 Retornos</button>
+    <button class="tab" onclick="showTab('busca',this)">🔍 Busca</button>
+  </div>
+
+  <!-- PANEL: ESTATÍSTICAS -->
+  <div id="tab-stats" class="panel active">
+    <div class="grid2">
+      <div class="mini"><div class="n" style="color:#388bfd">623</div><div class="l">Já estiveram</div></div>
+      <div class="mini"><div class="n" style="color:#25d366">45%</div><div class="l">Taxa de retenção</div></div>
+      <div class="mini"><div class="n" style="color:#f85149">29</div><div class="l">Pior dia (12/05)</div></div>
+      <div class="mini"><div class="n" style="color:#d29300">43</div><div class="l">Melhor entrada (09/05)</div></div>
+    </div>
+    <div class="section"><h2>📥 Top dias de Entrada</h2><div class="bar-chart" id="bar-in"></div></div>
+    <div class="section"><h2>🚪 Top dias de Saída</h2><div class="bar-chart" id="bar-out"></div></div>
+    <div class="section"><h2>📅 Entradas vs Saídas por Semana</h2><div class="bar-chart" id="bar-week"></div></div>
+    <div class="section"><h2>🏆 Ranking de saídas por data</h2>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Data</th><th>Saídas</th><th>Bar</th></tr></thead><tbody id="rank-tbl"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PANEL: ATIVOS -->
+  <div id="tab-ativos" class="panel">
+    <div class="section"><h2>✅ Membros Ativos</h2>
+      <div class="search-row">
+        <input class="sb" placeholder="🔍 Nome ou telefone..." oninput="filterAtivos()" id="sa"/>
+        <select class="sf" onchange="filterAtivos()" id="fa">
+          <option value="">Todos</option><option value="named">Com nome</option><option value="contact">Sem nome</option>
+        </select>
+        <button class="ebtn" onclick="exportCSV(filteredAtivos,'membros_ativos.csv')">⬇️ CSV</button>
+      </div>
+      <div class="count-info" id="cnt-ativos">Exibindo 280 membros</div>
+      <div class="tbl-wrap"><table><thead><tr><th></th><th>Nome</th><th>Telefone</th><th>Tipo</th></tr></thead><tbody id="tbl-ativos"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PANEL: ENTRADAS -->
+  <div id="tab-entradas" class="panel">
+    <div class="section"><h2>📥 Histórico de Entradas</h2>
+      <div class="search-row">
+        <input class="sb" placeholder="🔍 Nome ou data..." oninput="filterEntradas()" id="se"/>
+        <select class="sf" onchange="filterEntradas()" id="fe-mes">
+          <option value="">Todos meses</option>
+          <option value="2026-05">Maio/2026</option>
+          <option value="2026-06">Junho/2026</option>
+        </select>
+        <select class="sf" onchange="filterEntradas()" id="fe-tipo">
+          <option value="">Todos tipos</option>
+          <option value="Link">Via link</option>
+          <option value="admin">Por admin</option>
+          <option value="Adicionado por">Por membro</option>
+        </select>
+        <button class="ebtn" onclick="exportCSV(filteredEntradas,'entradas.csv')">⬇️ CSV</button>
+      </div>
+      <div class="count-info" id="cnt-entradas">Exibindo 404 entradas</div>
+      <div class="tbl-wrap"><table><thead><tr><th></th><th>Nome</th><th>Data</th><th>Hora</th><th>Tipo</th></tr></thead><tbody id="tbl-entradas"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PANEL: SAÍDAS -->
+  <div id="tab-saidas" class="panel">
+    <div class="section"><h2>🚪 Histórico de Saídas</h2>
+      <div class="search-row">
+        <input class="sb" placeholder="🔍 Nome, telefone ou data..." oninput="filterSaidas()" id="ss"/>
+        <select class="sf" onchange="filterSaidas()" id="fs-mes">
+          <option value="">Todos meses</option>
+          <option value="2026-05">Maio/2026</option>
+          <option value="2026-06">Junho/2026</option>
+        </select>
+        <select class="sf" onchange="filterSaidas()" id="fs-sem">
+          <option value="">Todas semanas</option>
+          <option value="2026-06-22">Sem 22/06</option>
+          <option value="2026-06-15">Sem 15/06</option>
+          <option value="2026-06-08">Sem 08/06</option>
+          <option value="2026-06-01">Sem 01/06</option>
+          <option value="2026-05-25">Sem 25/05</option>
+          <option value="2026-05-18">Sem 18/05</option>
+          <option value="2026-05-11">Sem 11/05</option>
+          <option value="2026-05-04">Sem 04/05</option>
+        </select>
+        <button class="ebtn" onclick="exportCSV(filteredSaidas,'saidas.csv')">⬇️ CSV</button>
+      </div>
+      <div class="count-info" id="cnt-saidas">Exibindo 343 saídas</div>
+      <div class="tbl-wrap"><table><thead><tr><th></th><th>Nome</th><th>Telefone</th><th>Data</th><th>Hora</th></tr></thead><tbody id="tbl-saidas"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PANEL: RETORNOS -->
+  <div id="tab-retornos" class="panel">
+    <div class="section"><h2>🔄 Pessoas que Saíram e Voltaram</h2>
+      <button class="ebtn" style="margin-bottom:12px" onclick="exportCSV(RETORNOS,'retornos.csv')">⬇️ Exportar CSV</button>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th></th><th>Nome</th><th>Saiu em</th><th>Voltou em</th><th>Fora</th></tr></thead>
+        <tbody id="tbl-retornos"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- PANEL: BUSCA -->
+  <div id="tab-busca" class="panel">
+    <div class="section"><h2>🔍 Busca Global — 623 registros</h2>
+      <div class="search-row">
+        <input class="sb" placeholder="Nome, número, parte do telefone..." oninput="buscaGlobal(this.value)" id="sg"/>
+      </div>
+      <div class="count-info" id="cnt-global">Digite ao menos 2 caracteres</div>
+      <div class="tbl-wrap"><table><thead><tr><th></th><th>Nome</th><th>Telefone</th><th>Status</th><th>Data</th></tr></thead><tbody id="tbl-global"></tbody></table></div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav">
+  <button class="bnav-btn active" onclick="showTab('stats',null,this)"><span class="icon">📊</span>Stats</button>
+  <button class="bnav-btn" onclick="showTab('ativos',null,this)"><span class="icon">✅</span>Ativos</button>
+  <button class="bnav-btn" onclick="showTab('entradas',null,this)"><span class="icon">📥</span>Entradas</button>
+  <button class="bnav-btn" onclick="showTab('saidas',null,this)"><span class="icon">🚪</span>Saídas</button>
+  <button class="bnav-btn" onclick="showTab('busca',null,this)"><span class="icon">🔍</span>Busca</button>
+</nav>
+
+</div><!-- /app -->
+
+<!-- Install banner -->
+<div id="install-banner" onclick="installPWA()">📲 Instalar App</div>
+
+<script>
+// ===== AUTH =====
+const HASH = '09711e9c7ea97ffd62250bfe6e152dd1769724fe0e664fe0a85d47ea579858c9';
+const SESSION_KEY = 'ccfi_auth';
+
+async function sha256(msg){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function doLogin(){
+  const pwd = document.getElementById('login-input').value;
+  if(!pwd) return;
+  const hash = await sha256(pwd);
+  if(hash === HASH){
+    sessionStorage.setItem(SESSION_KEY, '1');
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    initApp();
+  } else {
+    const err = document.getElementById('login-error');
+    err.style.display='block';
+    document.getElementById('login-input').value='';
+    document.getElementById('login-input').focus();
+    setTimeout(()=>err.style.display='none', 3000);
+  }
+}
+
+function doLogout(){
+  sessionStorage.removeItem(SESSION_KEY);
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-input').value='';
+}
+
+// Verificar sessão ao carregar
+window.addEventListener('DOMContentLoaded', ()=>{
+  if(sessionStorage.getItem(SESSION_KEY)==='1'){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    initApp();
+  } else {
+    setTimeout(()=>document.getElementById('login-input').focus(), 300);
+  }
+});
+
+// ===== DADOS =====
+const ATIVOS=[{"name": "A Mulher De Branco No Meu Casamento ❤️", "phone": "+55 9189364526", "country": "Brazil"}, {"name": "Alessandro TRE", "phone": "+55 9181817966", "country": "Brazil"}, {"name": "Alexandre Daltro", "phone": "+55 24 98109 7898", "country": "Brazil"}, {"name": "Aline Américo", "phone": "+55 9188718712", "country": "Brazil"}, {"name": "Aline BANPARA", "phone": "+55 9192904330", "country": "Brazil"}, {"name": "Ana Carteira", "phone": "+55 9191419102", "country": "Brazil"}, {"name": "Ana Pimentel", "phone": "+55 9180465214", "country": "Brazil"}, {"name": "Andre BANPARA", "phone": "+55 9191376346", "country": "Brazil"}, {"name": "Angra TRE", "phone": "+55 9186213320", "country": "Brazil"}, {"name": "Argélia TRE", "phone": "+55 9184726877", "country": "Brazil"}, {"name": "Armando Nassar", "phone": "+55 9192161058", "country": "Brazil"}, {"name": "Batista", "phone": "+55 9180312726", "country": "Brazil"}, {"name": "Bruna Amaral", "phone": "+55 9180359453", "country": "Brazil"}, {"name": "Bruno Daltro Belem", "phone": "+55 9183797903", "country": "Brazil"}, {"name": "Candace", "phone": "+55 9384031695", "country": "Brazil"}, {"name": "Cat", "phone": "+55 9181661420", "country": "Brazil"}, {"name": "Cláudio Márcio TRE", "phone": "+55 9182424021", "country": "Brazil"}, {"name": "Cleia", "phone": "+55 9182857228", "country": "Brazil"}, {"name": "Davi Salbé", "phone": "+55 9184635946", "country": "Brazil"}, {"name": "Edilberto Gurupa", "phone": "+55 9189671746", "country": "Brazil"}, {"name": "Edyléa", "phone": "+55 9191646337", "country": "Brazil"}, {"name": "Elieldre P. TRE", "phone": "+55 9182317901", "country": "Brazil"}, {"name": "Eloy Breves", "phone": "+55 9192508492", "country": "Brazil"}, {"name": "Ezequias TRE 2020", "phone": "+55 9192036867", "country": "Brazil"}, {"name": "Flavio TJ", "phone": "+55 9182997622", "country": "Brazil"}, {"name": "Franco 2019", "phone": "+55 9185749324", "country": "Brazil"}, {"name": "Gabriel BANPARA", "phone": "+55 9185204000", "country": "Brazil"}, {"name": "Gabriel NT", "phone": "+55 11 99177 5169", "country": "Brazil"}, {"name": "Gabriel Salbé BANPARA", "phone": "+55 9184849479", "country": "Brazil"}, {"name": "Gabriel Salbé TIM", "phone": "+55 9182935143", "country": "Brazil"}, {"name": "Gabriel Tui", "phone": "+55 9181312011", "country": "Brazil"}, {"name": "Geziel BANPARA", "phone": "+55 9182343349", "country": "Brazil"}, {"name": "Glauber GESER", "phone": "+55 9181952911", "country": "Brazil"}, {"name": "Glaucio TRE", "phone": "+55 9181572223", "country": "Brazil"}, {"name": "Glaudson BANPARA", "phone": "+55 9181860635", "country": "Brazil"}, {"name": "Guilherme BANPARA", "phone": "+55 9189883828", "country": "Brazil"}, {"name": "Guimel", "phone": "+55 9184601001", "country": "Brazil"}, {"name": "Helena Paiva", "phone": "+55 9188028598", "country": "Brazil"}, {"name": "Heloisa Paiva", "phone": "+55 9188991272", "country": "Brazil"}, {"name": "Henrique PEDREIRA", "phone": "+55 9182197778", "country": "Brazil"}, {"name": "Irmã Simone Prainha", "phone": "+55 9384158268", "country": "Brazil"}, {"name": "Isabella Scardino", "phone": "+55 9180864186", "country": "Brazil"}, {"name": "Jean Auto Escola", "phone": "+55 9189331393", "country": "Brazil"}, {"name": "Jeancy", "phone": "+55 9184763169", "country": "Brazil"}, {"name": "Johabe BANPARA", "phone": "+55 9183987307", "country": "Brazil"}, {"name": "Jorge Cabelo", "phone": "+55 9199677210", "country": "Brazil"}, {"name": "Kl", "phone": "+55 9384235490", "country": "Brazil"}, {"name": "Laura Neiva", "phone": "+55 9196221611", "country": "Brazil"}, {"name": "Lenon BANPARA", "phone": "+55 9196380878", "country": "Brazil"}, {"name": "Leo Geser", "phone": "+55 9184663821", "country": "Brazil"}, {"name": "Leo Pedreira", "phone": "+55 9180396231", "country": "Brazil"}, {"name": "Leonan Vinícius", "phone": "+55 9198127422", "country": "Brazil"}, {"name": "Leonardo Umarizal", "phone": "+55 9182105780", "country": "Brazil"}, {"name": "Levi SA", "phone": "+55 9181973432", "country": "Brazil"}, {"name": "LHSS", "phone": "+55 6298381934", "country": "Brazil"}, {"name": "Lorena GETER", "phone": "+55 9181382011", "country": "Brazil"}, {"name": "Lucas Carneiro", "phone": "+55 4991554325", "country": "Brazil"}, {"name": "Lucas Gurupa", "phone": "+55 9185476928", "country": "Brazil"}, {"name": "Lucidalma", "phone": "+55 9181156726", "country": "Brazil"}, {"name": "Luciley", "phone": "+55 9184630853", "country": "Brazil"}, {"name": "Marcelo Alencar Eetepa", "phone": "+55 9183039090", "country": "Brazil"}, {"name": "MATURAGOL494", "phone": "+55 9185084009", "country": "Brazil"}, {"name": "MATURAGOO2MB", "phone": "+55 9185021837", "country": "Brazil"}, {"name": "Mauricio Est Banpara", "phone": "+55 9180834571", "country": "Brazil"}, {"name": "Max", "phone": "+55 9182282641", "country": "Brazil"}, {"name": "Melquisedeque Zé Da Manga", "phone": "+55 27 99767 6105", "country": "Brazil"}, {"name": "Mikaela", "phone": "+55 9183195940", "country": "Brazil"}, {"name": "Nicole BANPARA", "phone": "+55 9183028889", "country": "Brazil"}, {"name": "Nicson", "phone": "+55 9184063808", "country": "Brazil"}, {"name": "Onishi BANPARA", "phone": "+55 9182513807", "country": "Brazil"}, {"name": "Pai", "phone": "+55 9182023114", "country": "Brazil"}, {"name": "Pedro Alexandre", "phone": "+55 9188074948", "country": "Brazil"}, {"name": "Priscila BANPARA", "phone": "+55 9192358448", "country": "Brazil"}, {"name": "Prof Grácio", "phone": "+55 9181006374", "country": "Brazil"}, {"name": "Rebeka Barreto", "phone": "+55 8291022797", "country": "Brazil"}, {"name": "Renan Lemos Banpará", "phone": "+55 9188341200", "country": "Brazil"}, {"name": "Renato Penner BANPARA", "phone": "+55 9182821863", "country": "Brazil"}, {"name": "Rianda Salbé", "phone": "+55 9184085766", "country": "Brazil"}, {"name": "Robert Bragança", "phone": "+55 9180420387", "country": "Brazil"}, {"name": "Rodrigo Primo", "phone": "+55 9182276570", "country": "Brazil"}, {"name": "Rodrigo TRE", "phone": "+55 9191003645", "country": "Brazil"}, {"name": "Roge Presente", "phone": "+55 9184528268", "country": "Brazil"}, {"name": "Scarlet Central", "phone": "+55 9183240510", "country": "Brazil"}, {"name": "Sérgio SP", "phone": "+55 17 99159 5442", "country": "Brazil"}, {"name": "Silvia BANPARA", "phone": "+55 9182087232", "country": "Brazil"}, {"name": "Ssd", "phone": "+55 9189076856", "country": "Brazil"}, {"name": "Stephanie Central", "phone": "+55 9182385299", "country": "Brazil"}, {"name": "Thiago Lima Estudante", "phone": "+55 9188227762", "country": "Brazil"}, {"name": "Tia Odília", "phone": "+55 9182269656", "country": "Brazil"}, {"name": "Tio Junio TIM", "phone": "+55 9184758158", "country": "Brazil"}, {"name": "Victor GERENTE BANPARA", "phone": "+55 9183615939", "country": "Brazil"}, {"name": "Wilson Leite", "phone": "+55 9183795333", "country": "Brazil"}, {"name": "Edson Gomes", "phone": "+55 9180275928", "country": "Brazil"}, {"name": "Contact  1", "phone": "+55 9384117284", "country": "Brazil"}, {"name": "Contact  2", "phone": "+55 9185482531", "country": "Brazil"}, {"name": "Contact  3", "phone": "+55 9182342227", "country": "Brazil"}, {"name": "Contact  4", "phone": "+55 9191826444", "country": "Brazil"}, {"name": "Contact  5", "phone": "+55 9183558373", "country": "Brazil"}, {"name": "Contact  6", "phone": "+55 9192402268", "country": "Brazil"}, {"name": "Contact  7", "phone": "+55 9182563639", "country": "Brazil"}, {"name": "Contact  8", "phone": "+55 9191312845", "country": "Brazil"}, {"name": "Contact  9", "phone": "+55 11 95405 1437", "country": "Brazil"}, {"name": "Contact  10", "phone": "+55 9491287041", "country": "Brazil"}, {"name": "Contact  11", "phone": "+55 21 96476 8715", "country": "Brazil"}, {"name": "Contact  12", "phone": "+55 21 99294 4782", "country": "Brazil"}, {"name": "Contact  13", "phone": "+55 9181135051", "country": "Brazil"}, {"name": "Contact  14", "phone": "+62 857 1268 5462", "country": "Indonesia"}, {"name": "Contact  15", "phone": "+55 21 97994 4330", "country": "Brazil"}, {"name": "Contact  16", "phone": "+55 11 97862 2020", "country": "Brazil"}, {"name": "Contact  17", "phone": "+55 9199716545", "country": "Brazil"}, {"name": "Contact  18", "phone": "+55 9180463137", "country": "Brazil"}, {"name": "Contact  19", "phone": "+55 9181281660", "country": "Brazil"}, {"name": "Contact  20", "phone": "+55 9188435306", "country": "Brazil"}, {"name": "Contact  21", "phone": "+55 9184564473", "country": "Brazil"}, {"name": "Contact  22", "phone": "+55 9484316423", "country": "Brazil"}, {"name": "Contact  23", "phone": "+55 9193423431", "country": "Brazil"}, {"name": "Contact  24", "phone": "+55 6291562653", "country": "Brazil"}, {"name": "Contact  25", "phone": "+55 9185358503", "country": "Brazil"}, {"name": "Contact  26", "phone": "+55 21 98759 3361", "country": "Brazil"}, {"name": "Contact  27", "phone": "+55 9185228189", "country": "Brazil"}, {"name": "Contact  28", "phone": "+55 9183649094", "country": "Brazil"}, {"name": "Contact  29", "phone": "+55 9187577288", "country": "Brazil"}, {"name": "Contact  30", "phone": "+55 9186285300", "country": "Brazil"}, {"name": "Contact  31", "phone": "+55 9180544433", "country": "Brazil"}, {"name": "Contact  32", "phone": "+55 9198273918", "country": "Brazil"}, {"name": "Contact  33", "phone": "+55 9192054592", "country": "Brazil"}, {"name": "Contact  34", "phone": "+62 831 1584 4053", "country": "Indonesia"}, {"name": "Contact  35", "phone": "+55 9180105733", "country": "Brazil"}, {"name": "Contact  36", "phone": "+55 9180171005", "country": "Brazil"}, {"name": "Contact  37", "phone": "+55 9187410781", "country": "Brazil"}, {"name": "Contact  38", "phone": "+55 9182441306", "country": "Brazil"}, {"name": "Contact  39", "phone": "+55 11 96204 1308", "country": "Brazil"}, {"name": "Contact  40", "phone": "+55 9185934106", "country": "Brazil"}, {"name": "Contact  41", "phone": "+55 6593321721", "country": "Brazil"}, {"name": "Contact  42", "phone": "+55 11 94168 5836", "country": "Brazil"}, {"name": "Contact  43", "phone": "+55 9186114442", "country": "Brazil"}, {"name": "Contact  44", "phone": "+55 9182051160", "country": "Brazil"}, {"name": "Contact  45", "phone": "+55 9182992005", "country": "Brazil"}, {"name": "Contact  46", "phone": "+55 9185503552", "country": "Brazil"}, {"name": "Contact  47", "phone": "+55 9187431428", "country": "Brazil"}, {"name": "Contact  48", "phone": "+55 8386533905", "country": "Brazil"}, {"name": "Contact  49", "phone": "+55 9180602095", "country": "Brazil"}, {"name": "Contact  50", "phone": "+55 9185063470", "country": "Brazil"}, {"name": "Contact  51", "phone": "+55 9181481904", "country": "Brazil"}, {"name": "Contact  52", "phone": "+55 24 99330 0324", "country": "Brazil"}, {"name": "Contact  53", "phone": "+55 9182003145", "country": "Brazil"}, {"name": "Contact  54", "phone": "+55 9193970962", "country": "Brazil"}, {"name": "Contact  55", "phone": "+595 983 906343", "country": "Paraguay"}, {"name": "Contact  56", "phone": "+55 9185612298", "country": "Brazil"}, {"name": "Contact  57", "phone": "+55 9193686594", "country": "Brazil"}, {"name": "Contact  58", "phone": "+55 21 97579 1751", "country": "Brazil"}, {"name": "Contact  59", "phone": "+55 9187327547", "country": "Brazil"}, {"name": "Contact  60", "phone": "+55 9180330325", "country": "Brazil"}, {"name": "Contact  61", "phone": "+55 11 98924 1335", "country": "Brazil"}, {"name": "Contact  62", "phone": "+55 8299413720", "country": "Brazil"}, {"name": "Contact  63", "phone": "+55 9199898770", "country": "Brazil"}, {"name": "Contact  64", "phone": "+55 9184694995", "country": "Brazil"}, {"name": "Contact  65", "phone": "+55 21 99128 6831", "country": "Brazil"}, {"name": "Contact  66", "phone": "+55 21 99578 6166", "country": "Brazil"}, {"name": "Contact  67", "phone": "+55 21 96422 5099", "country": "Brazil"}, {"name": "Contact  68", "phone": "+55 9191202518", "country": "Brazil"}, {"name": "Contact  69", "phone": "+55 21 98305 5174", "country": "Brazil"}, {"name": "Contact  70", "phone": "+55 9188628722", "country": "Brazil"}, {"name": "Contact  71", "phone": "+55 9187660321", "country": "Brazil"}, {"name": "Contact  72", "phone": "+55 9192862683", "country": "Brazil"}, {"name": "Contact  73", "phone": "+55 9191421117", "country": "Brazil"}, {"name": "Contact  74", "phone": "+55 9180549221", "country": "Brazil"}, {"name": "Contact  75", "phone": "+55 9191697896", "country": "Brazil"}, {"name": "Contact  76", "phone": "+55 9188677189", "country": "Brazil"}, {"name": "Contact  77", "phone": "+55 9180678894", "country": "Brazil"}, {"name": "Contact  78", "phone": "+55 9191714069", "country": "Brazil"}, {"name": "Contact  79", "phone": "+55 9186160209", "country": "Brazil"}, {"name": "Contact  80", "phone": "+55 9180912229", "country": "Brazil"}, {"name": "Contact  81", "phone": "+55 9193948141", "country": "Brazil"}, {"name": "Contact  82", "phone": "+55 9192335025", "country": "Brazil"}, {"name": "Contact  83", "phone": "+55 9181391406", "country": "Brazil"}, {"name": "Contact  84", "phone": "+55 4899624495", "country": "Brazil"}, {"name": "Contact  85", "phone": "+55 3391102836", "country": "Brazil"}, {"name": "Contact  86", "phone": "+55 9181123531", "country": "Brazil"}, {"name": "Contact  87", "phone": "+55 9187446605", "country": "Brazil"}, {"name": "Contact  88", "phone": "+55 9185834222", "country": "Brazil"}, {"name": "Contact  89", "phone": "+55 9180720679", "country": "Brazil"}, {"name": "Contact  90", "phone": "+55 8596469998", "country": "Brazil"}, {"name": "Contact  91", "phone": "+55 9191963977", "country": "Brazil"}, {"name": "Contact  92", "phone": "+55 9184273826", "country": "Brazil"}, {"name": "Contact  93", "phone": "+55 49 92004 4654", "country": "Brazil"}, {"name": "Contact  94", "phone": "+55 9187042174", "country": "Brazil"}, {"name": "Contact  95", "phone": "+55 5599417980", "country": "Brazil"}, {"name": "Contact  96", "phone": "+55 21 96643 3533", "country": "Brazil"}, {"name": "Contact  97", "phone": "+55 7399954726", "country": "Brazil"}, {"name": "Contact  98", "phone": "+55 11 94753 7053", "country": "Brazil"}, {"name": "Contact  99", "phone": "+55 7191444740", "country": "Brazil"}, {"name": "Contact  100", "phone": "+55 9180790582", "country": "Brazil"}, {"name": "Contact  101", "phone": "+55 9198203173", "country": "Brazil"}, {"name": "Contact  102", "phone": "+55 7193883641", "country": "Brazil"}, {"name": "Contact  103", "phone": "+55 8585400619", "country": "Brazil"}, {"name": "Contact  104", "phone": "+55 6192804943", "country": "Brazil"}, {"name": "Contact  105", "phone": "+55 9180515325", "country": "Brazil"}, {"name": "Contact  106", "phone": "+55 9198387802", "country": "Brazil"}, {"name": "Contact  107", "phone": "+55 7499409563", "country": "Brazil"}, {"name": "Contact  108", "phone": "+55 9199672014", "country": "Brazil"}, {"name": "Contact  109", "phone": "+55 6391358118", "country": "Brazil"}, {"name": "Contact  110", "phone": "+55 9199230200", "country": "Brazil"}, {"name": "Contact  111", "phone": "+55 9181314678", "country": "Brazil"}, {"name": "Contact  112", "phone": "+55 83 92003 7087", "country": "Brazil"}, {"name": "Contact  113", "phone": "+55 9193515844", "country": "Brazil"}, {"name": "Contact  114", "phone": "+55 11 99296 6166", "country": "Brazil"}, {"name": "Contact  115", "phone": "+55 9180608286", "country": "Brazil"}, {"name": "Contact  116", "phone": "+55 9187093963", "country": "Brazil"}, {"name": "Contact  117", "phone": "+55 7193851328", "country": "Brazil"}, {"name": "Contact  118", "phone": "+55 17 99751 9253", "country": "Brazil"}, {"name": "Contact  119", "phone": "+55 9180283467", "country": "Brazil"}, {"name": "Contact  120", "phone": "+55 9188200005", "country": "Brazil"}, {"name": "Contact  121", "phone": "+55 9185207080", "country": "Brazil"}, {"name": "Contact  122", "phone": "+55 19 98140 2148", "country": "Brazil"}, {"name": "Contact  123", "phone": "+55 21 97368 9225", "country": "Brazil"}, {"name": "Contact  124", "phone": "+55 9193178684", "country": "Brazil"}, {"name": "Contact  125", "phone": "+55 9180496646", "country": "Brazil"}, {"name": "Contact  126", "phone": "+55 9192033193", "country": "Brazil"}, {"name": "Contact  127", "phone": "+55 9192106287", "country": "Brazil"}, {"name": "Contact  128", "phone": "+55 5197666945", "country": "Brazil"}, {"name": "Contact  129", "phone": "+55 9187618391", "country": "Brazil"}, {"name": "Contact  130", "phone": "+55 9180115082", "country": "Brazil"}, {"name": "Contact  131", "phone": "+55 9184698506", "country": "Brazil"}, {"name": "Contact  132", "phone": "+55 14 99631 3749", "country": "Brazil"}, {"name": "Contact  133", "phone": "+55 9182675346", "country": "Brazil"}, {"name": "Contact  134", "phone": "+55 9188790463", "country": "Brazil"}, {"name": "Contact  135", "phone": "+55 9189337808", "country": "Brazil"}, {"name": "Contact  136", "phone": "+55 19 97417 7649", "country": "Brazil"}, {"name": "Contact  137", "phone": "+55 9182196285", "country": "Brazil"}, {"name": "Contact  138", "phone": "+55 9192350913", "country": "Brazil"}, {"name": "Contact  139", "phone": "+55 9183824616", "country": "Brazil"}, {"name": "Contact  140", "phone": "+55 9196068621", "country": "Brazil"}, {"name": "Contact  141", "phone": "+55 9282318627", "country": "Brazil"}, {"name": "Contact  142", "phone": "+55 15 99756 9880", "country": "Brazil"}, {"name": "Contact  143", "phone": "+55 9188950233", "country": "Brazil"}, {"name": "Contact  144", "phone": "+55 9191809988", "country": "Brazil"}, {"name": "Contact  145", "phone": "+55 9193791144", "country": "Brazil"}, {"name": "Contact  146", "phone": "+55 9184759955", "country": "Brazil"}, {"name": "Contact  147", "phone": "+55 9184971867", "country": "Brazil"}, {"name": "Contact  148", "phone": "+55 9199247706", "country": "Brazil"}, {"name": "Contact  149", "phone": "+55 6392884664", "country": "Brazil"}, {"name": "Contact  150", "phone": "+55 9186069451", "country": "Brazil"}, {"name": "Contact  151", "phone": "+55 9182038399", "country": "Brazil"}, {"name": "Contact  152", "phone": "+55 9196152853", "country": "Brazil"}, {"name": "Contact  153", "phone": "+55 9181105346", "country": "Brazil"}, {"name": "Contact  154", "phone": "+55 8896972521", "country": "Brazil"}, {"name": "Contact  155", "phone": "+55 9384153733", "country": "Brazil"}, {"name": "Contact  156", "phone": "+55 9181668335", "country": "Brazil"}, {"name": "Contact  157", "phone": "+55 9184765261", "country": "Brazil"}, {"name": "Contact  158", "phone": "+55 9196053966", "country": "Brazil"}, {"name": "Contact  159", "phone": "+55 9184976512", "country": "Brazil"}, {"name": "Contact  160", "phone": "+55 21 96845 7755", "country": "Brazil"}, {"name": "Contact  161", "phone": "+55 3898787443", "country": "Brazil"}, {"name": "Contact  162", "phone": "+55 9193257513", "country": "Brazil"}, {"name": "Contact  163", "phone": "+55 9184554884", "country": "Brazil"}, {"name": "Contact  164", "phone": "+55 9180474488", "country": "Brazil"}, {"name": "Contact  165", "phone": "+55 9181469162", "country": "Brazil"}, {"name": "Contact  166", "phone": "+55 9192344634", "country": "Brazil"}, {"name": "Contact  167", "phone": "+55 9198404780", "country": "Brazil"}, {"name": "Contact  168", "phone": "+55 9384031270", "country": "Brazil"}, {"name": "Contact  169", "phone": "+55 9193644601", "country": "Brazil"}, {"name": "Contact  170", "phone": "+55 9185558528", "country": "Brazil"}, {"name": "Contact  171", "phone": "+55 8899330718", "country": "Brazil"}, {"name": "Contact  172", "phone": "+55 9181487161", "country": "Brazil"}, {"name": "Contact  173", "phone": "+55 17 99665 8870", "country": "Brazil"}, {"name": "Contact  174", "phone": "+55 6182427443", "country": "Brazil"}, {"name": "Contact  175", "phone": "+55 9181057201", "country": "Brazil"}, {"name": "Contact  176", "phone": "+55 9192311644", "country": "Brazil"}, {"name": "Contact  177", "phone": "+55 9185089161", "country": "Brazil"}, {"name": "Contact  178", "phone": "+55 9182135220", "country": "Brazil"}, {"name": "Contact  179", "phone": "+55 9184273422", "country": "Brazil"}, {"name": "Contact  180", "phone": "+55 9189545220", "country": "Brazil"}, {"name": "Contact  181", "phone": "+55 9187644169", "country": "Brazil"}, {"name": "Contact  182", "phone": "+55 21 99133 6383", "country": "Brazil"}, {"name": "Contact  183", "phone": "+55 9180182813", "country": "Brazil"}, {"name": "Contact  184", "phone": "+55 9184119285", "country": "Brazil"}, {"name": "Contact  185", "phone": "+55 9184990957", "country": "Brazil"}, {"name": "Contact  186", "phone": "+55 9189712111", "country": "Brazil"}, {"name": "Contact  187", "phone": "+55 9189175059", "country": "Brazil"}];
+const SAIDAS=[{"name": "+55 91 98065-6925", "phone": "+55 91 98065-6925", "date": "2026-06-27", "time": "20:14"}, {"name": "+55 91 98187-4424", "phone": "+55 91 98187-4424", "date": "2026-06-27", "time": "19:44"}, {"name": "+55 14 98130-3022", "phone": "+55 14 98130-3022", "date": "2026-06-27", "time": "19:25"}, {"name": "+55 98 98507-0188", "phone": "+55 98 98507-0188", "date": "2026-06-27", "time": "19:02"}, {"name": "+55 91 98441-7557", "phone": "+55 91 98441-7557", "date": "2026-06-27", "time": "18:45"}, {"name": "+55 91 99101-3968", "phone": "+55 91 99101-3968", "date": "2026-06-27", "time": "18:35"}, {"name": "+55 11 91539-0403", "phone": "+55 11 91539-0403", "date": "2026-06-27", "time": "17:58"}, {"name": "+55 91 98592-6626", "phone": "+55 91 98592-6626", "date": "2026-06-27", "time": "17:43"}, {"name": "+55 19 93624-0278", "phone": "+55 19 93624-0278", "date": "2026-06-27", "time": "13:29"}, {"name": "Gabriel Claro Motorola", "phone": "", "date": "2026-06-27", "time": "10:35"}, {"name": "Fabricio Silva", "phone": "", "date": "2026-06-26", "time": "22:37"}, {"name": "+55 11 92466-3925", "phone": "+55 11 92466-3925", "date": "2026-06-26", "time": "19:33"}, {"name": "+55 11 98235-9313", "phone": "+55 11 98235-9313", "date": "2026-06-26", "time": "17:48"}, {"name": "Bruno Barbosa", "phone": "", "date": "2026-06-26", "time": "15:25"}, {"name": "+55 48 99987-5835", "phone": "+55 48 99987-5835", "date": "2026-06-26", "time": "22:11"}, {"name": "paolla rodrigues Banpara", "phone": "", "date": "2026-06-26", "time": "21:56"}, {"name": "+55 91 98434-1906", "phone": "+55 91 98434-1906", "date": "2026-06-26", "time": "19:29"}, {"name": "+55 12 98269-7038", "phone": "+55 12 98269-7038", "date": "2026-06-26", "time": "19:13"}, {"name": "+55 11 96780-1394", "phone": "+55 11 96780-1394", "date": "2026-06-26", "time": "16:56"}, {"name": "+55 87 99995-2186", "phone": "+55 87 99995-2186", "date": "2026-06-26", "time": "16:56"}, {"name": "+55 91 98543-1849", "phone": "+55 91 98543-1849", "date": "2026-06-26", "time": "10:33"}, {"name": "+55 91 98087-9718", "phone": "+55 91 98087-9718", "date": "2026-06-26", "time": "09:09"}, {"name": "Talita dos Santos Salbé", "phone": "", "date": "2026-06-26", "time": "00:29"}, {"name": "Lucas SA", "phone": "", "date": "2026-06-25", "time": "10:25"}, {"name": "+55 91 98161-4086", "phone": "+55 91 98161-4086", "date": "2026-06-25", "time": "10:37"}, {"name": "+55 28 99939-8834", "phone": "+55 28 99939-8834", "date": "2026-06-25", "time": "09:19"}, {"name": "+55 11 98174-2811", "phone": "+55 11 98174-2811", "date": "2026-06-25", "time": "09:19"}, {"name": "+55 91 98524-8660", "phone": "+55 91 98524-8660", "date": "2026-06-25", "time": "09:19"}, {"name": "+55 18 98107-6671", "phone": "+55 18 98107-6671", "date": "2026-06-25", "time": "09:19"}, {"name": "+55 51 99720-8379", "phone": "+55 51 99720-8379", "date": "2026-06-25", "time": "09:19"}, {"name": "Fernandes", "phone": "", "date": "2026-06-25", "time": "09:19"}, {"name": "+55 91 98134-9678", "phone": "+55 91 98134-9678", "date": "2026-06-25", "time": "09:19"}, {"name": "+55 91 98339-7382", "phone": "+55 91 98339-7382", "date": "2026-06-25", "time": "09:19"}, {"name": "+55 91 98051-5959", "phone": "+55 91 98051-5959", "date": "2026-06-23", "time": "17:18"}, {"name": "+55 91 98976-5958", "phone": "+55 91 98976-5958", "date": "2026-06-23", "time": "14:56"}, {"name": "+55 19 99182-5104", "phone": "+55 19 99182-5104", "date": "2026-06-23", "time": "14:42"}, {"name": "+55 75 99863-0505", "phone": "+55 75 99863-0505", "date": "2026-06-23", "time": "13:52"}, {"name": "+55 91 98852-8696", "phone": "+55 91 98852-8696", "date": "2026-06-23", "time": "13:14"}, {"name": "+55 91 98493-6905", "phone": "+55 91 98493-6905", "date": "2026-06-23", "time": "08:36"}, {"name": "+55 91 99832-5717", "phone": "+55 91 99832-5717", "date": "2026-06-22", "time": "06:45"}, {"name": "+55 91 98277-0047", "phone": "+55 91 98277-0047", "date": "2026-06-22", "time": "23:27"}, {"name": "+55 91 98166-7840", "phone": "+55 91 98166-7840", "date": "2026-06-22", "time": "22:47"}, {"name": "+55 91 98871-9071", "phone": "+55 91 98871-9071", "date": "2026-06-22", "time": "22:32"}, {"name": "+55 48 99965-3964", "phone": "+55 48 99965-3964", "date": "2026-06-22", "time": "16:31"}, {"name": "Helder", "phone": "", "date": "2026-06-22", "time": "11:16"}, {"name": "+55 85 98233-3602", "phone": "+55 85 98233-3602", "date": "2026-06-20", "time": "12:59"}, {"name": "+55 77 98166-5432", "phone": "+55 77 98166-5432", "date": "2026-06-20", "time": "07:47"}, {"name": "+55 91 98614-2219", "phone": "+55 91 98614-2219", "date": "2026-06-19", "time": "16:24"}, {"name": "+55 48 99165-3332", "phone": "+55 48 99165-3332", "date": "2026-06-19", "time": "16:12"}, {"name": "Lucieti", "phone": "", "date": "2026-06-19", "time": "10:46"}, {"name": "+55 11 97825-0460", "phone": "+55 11 97825-0460", "date": "2026-06-18", "time": "22:26"}, {"name": "+55 91 98590-6359", "phone": "+55 91 98590-6359", "date": "2026-06-18", "time": "18:10"}, {"name": "+55 18 99107-3968", "phone": "+55 18 99107-3968", "date": "2026-06-18", "time": "17:37"}, {"name": "+55 91 98872-3667", "phone": "+55 91 98872-3667", "date": "2026-06-18", "time": "17:33"}, {"name": "+55 14 99616-6398", "phone": "+55 14 99616-6398", "date": "2026-06-18", "time": "13:04"}, {"name": "+55 85 98889-6403", "phone": "+55 85 98889-6403", "date": "2026-06-18", "time": "09:02"}, {"name": "+55 71 99259-1117", "phone": "+55 71 99259-1117", "date": "2026-06-17", "time": "22:55"}, {"name": "+55 11 92205-7536", "phone": "+55 11 92205-7536", "date": "2026-06-17", "time": "18:37"}, {"name": "+63 946 760 7638", "phone": "+63 946 760 7638", "date": "2026-06-17", "time": "13:52"}, {"name": "Eivilson Gomes LINK", "phone": "", "date": "2026-06-17", "time": "09:55"}, {"name": "Josi Banpara", "phone": "", "date": "2026-06-17", "time": "09:55"}, {"name": "Josi Banpara", "phone": "", "date": "2026-06-16", "time": "17:50"}, {"name": "+55 91 98166-9191", "phone": "+55 91 98166-9191", "date": "2026-06-16", "time": "17:17"}, {"name": "+55 33 99927-0240", "phone": "+55 33 99927-0240", "date": "2026-06-16", "time": "10:35"}, {"name": "+55 21 99333-4111", "phone": "+55 21 99333-4111", "date": "2026-06-16", "time": "10:24"}, {"name": "+55 67 99898-7932", "phone": "+55 67 99898-7932", "date": "2026-06-15", "time": "20:36"}, {"name": "+55 21 98107-1416", "phone": "+55 21 98107-1416", "date": "2026-06-15", "time": "19:57"}, {"name": "+55 91 99949-7310", "phone": "+55 91 99949-7310", "date": "2026-06-15", "time": "13:53"}, {"name": "Alex Prainha", "phone": "", "date": "2026-06-15", "time": "13:53"}, {"name": "+55 91 98038-5273", "phone": "+55 91 98038-5273", "date": "2026-06-15", "time": "10:37"}, {"name": "+55 11 95932-9489", "phone": "+55 11 95932-9489", "date": "2026-06-15", "time": "10:20"}, {"name": "Vanderleia.aquino LINK", "phone": "", "date": "2026-06-14", "time": "22:12"}, {"name": "+55 91 98141-3402", "phone": "+55 91 98141-3402", "date": "2026-06-14", "time": "21:21"}, {"name": "Andreianogarolli LINK", "phone": "", "date": "2026-06-14", "time": "19:42"}, {"name": "Barbara Serrano Physics", "phone": "", "date": "2026-06-14", "time": "13:31"}, {"name": "wemersonconcricao LINK", "phone": "", "date": "2026-06-13", "time": "21:04"}, {"name": "soluções Informática", "phone": "", "date": "2026-06-13", "time": "18:17"}, {"name": "+55 71 98521-0433", "phone": "+55 71 98521-0433", "date": "2026-06-13", "time": "10:54"}, {"name": "+55 91 98481-9852", "phone": "+55 91 98481-9852", "date": "2026-06-12", "time": "13:13"}, {"name": "+55 45 98839-3384", "phone": "+55 45 98839-3384", "date": "2026-06-12", "time": "12:07"}, {"name": "+55 19 98204-2671", "phone": "+55 19 98204-2671", "date": "2026-06-11", "time": "22:45"}, {"name": "+55 91 98542-9662", "phone": "+55 91 98542-9662", "date": "2026-06-11", "time": "19:18"}, {"name": "+55 91 98096-8561", "phone": "+55 91 98096-8561", "date": "2026-06-11", "time": "15:41"}, {"name": "Sheila Barbosa", "phone": "", "date": "2026-06-11", "time": "06:58"}, {"name": "+55 91 98256-5247", "phone": "+55 91 98256-5247", "date": "2026-06-11", "time": "04:50"}, {"name": "+55 91 98053-2345", "phone": "+55 91 98053-2345", "date": "2026-06-10", "time": "15:22"}, {"name": "+55 82 99929-1411", "phone": "+55 82 99929-1411", "date": "2026-06-10", "time": "12:09"}, {"name": "Alessandra", "phone": "", "date": "2026-06-10", "time": "08:25"}, {"name": "+55 91 98888-8048", "phone": "+55 91 98888-8048", "date": "2026-06-10", "time": "00:24"}, {"name": "+55 62 99455-8583", "phone": "+55 62 99455-8583", "date": "2026-06-09", "time": "20:37"}, {"name": "+55 91 98228-6525", "phone": "+55 91 98228-6525", "date": "2026-06-09", "time": "17:34"}, {"name": "Thais Santos", "phone": "", "date": "2026-06-09", "time": "17:11"}, {"name": "+55 91 98238-1669", "phone": "+55 91 98238-1669", "date": "2026-06-09", "time": "16:20"}, {"name": "+55 91 98418-0852", "phone": "+55 91 98418-0852", "date": "2026-06-09", "time": "15:51"}, {"name": "+55 91 98629-3355", "phone": "+55 91 98629-3355", "date": "2026-06-09", "time": "15:36"}, {"name": "+55 91 98160-7772", "phone": "+55 91 98160-7772", "date": "2026-06-09", "time": "15:01"}, {"name": "Aline Serpa", "phone": "", "date": "2026-06-09", "time": "14:03"}, {"name": "+55 91 98505-3001", "phone": "+55 91 98505-3001", "date": "2026-06-09", "time": "13:57"}, {"name": "+55 91 98198-9218", "phone": "+55 91 98198-9218", "date": "2026-06-09", "time": "13:30"}, {"name": "+55 85 99941-5212", "phone": "+55 85 99941-5212", "date": "2026-06-09", "time": "12:55"}, {"name": "Hilário Trindade", "phone": "", "date": "2026-06-09", "time": "12:55"}, {"name": "Família - Barreto", "phone": "", "date": "2026-06-09", "time": "12:33"}, {"name": "+55 91 98413-0913", "phone": "+55 91 98413-0913", "date": "2026-06-09", "time": "11:33"}, {"name": "+55 91 98821-2385", "phone": "+55 91 98821-2385", "date": "2026-06-08", "time": "21:55"}, {"name": "+55 91 98044-9244", "phone": "+55 91 98044-9244", "date": "2026-06-08", "time": "18:29"}, {"name": "+55 91 98172-5060", "phone": "+55 91 98172-5060", "date": "2026-06-08", "time": "15:36"}, {"name": "+55 91 98444-7876", "phone": "+55 91 98444-7876", "date": "2026-06-08", "time": "14:10"}, {"name": "+55 91 98358-8054", "phone": "+55 91 98358-8054", "date": "2026-06-08", "time": "13:03"}, {"name": "+55 91 98919-4658", "phone": "+55 91 98919-4658", "date": "2026-06-08", "time": "09:34"}, {"name": "+55 91 98018-4476", "phone": "+55 91 98018-4476", "date": "2026-06-07", "time": "21:37"}, {"name": "+55 91 98216-9998", "phone": "+55 91 98216-9998", "date": "2026-06-07", "time": "21:13"}, {"name": "+55 91 98180-2850", "phone": "+55 91 98180-2850", "date": "2026-06-07", "time": "20:34"}, {"name": "+55 91 98170-3392", "phone": "+55 91 98170-3392", "date": "2026-06-07", "time": "20:30"}, {"name": "+55 91 98281-4311", "phone": "+55 91 98281-4311", "date": "2026-06-07", "time": "20:00"}, {"name": "+55 85 99145-5596", "phone": "+55 85 99145-5596", "date": "2026-06-07", "time": "17:36"}, {"name": "+55 91 98125-9024", "phone": "+55 91 98125-9024", "date": "2026-06-07", "time": "16:31"}, {"name": "+55 91 98500-3182", "phone": "+55 91 98500-3182", "date": "2026-06-07", "time": "16:08"}, {"name": "Marcelo Vox data", "phone": "", "date": "2026-06-07", "time": "14:04"}, {"name": "+55 99 99234-9913", "phone": "+55 99 99234-9913", "date": "2026-06-07", "time": "11:33"}, {"name": "+55 91 98704-1232", "phone": "+55 91 98704-1232", "date": "2026-06-05", "time": "16:25"}, {"name": "+55 91 98028-5422", "phone": "+55 91 98028-5422", "date": "2026-06-05", "time": "11:43"}, {"name": "Claiperson (Manutenção de Câmeras)", "phone": "", "date": "2026-06-05", "time": "11:42"}, {"name": "Vinícius Cimadon", "phone": "", "date": "2026-06-04", "time": "19:49"}, {"name": "+55 91 98080-1397", "phone": "+55 91 98080-1397", "date": "2026-06-04", "time": "18:35"}, {"name": "+55 91 98996-6206", "phone": "+55 91 98996-6206", "date": "2026-06-04", "time": "16:53"}, {"name": "+55 91 99155-0252", "phone": "+55 91 99155-0252", "date": "2026-06-04", "time": "16:13"}, {"name": "+55 91 98351-7904", "phone": "+55 91 98351-7904", "date": "2026-06-04", "time": "14:35"}, {"name": "+55 91 98186-2819", "phone": "+55 91 98186-2819", "date": "2026-06-04", "time": "07:53"}, {"name": "+55 75 98139-6969", "phone": "+55 75 98139-6969", "date": "2026-06-03", "time": "22:20"}, {"name": "+55 98 98738-1452", "phone": "+55 98 98738-1452", "date": "2026-06-03", "time": "22:20"}, {"name": "Ed Kaiser", "phone": "", "date": "2026-06-03", "time": "22:20"}, {"name": "Melquisedeque SA", "phone": "", "date": "2026-06-03", "time": "22:20"}, {"name": "Marilene", "phone": "", "date": "2026-06-03", "time": "22:20"}, {"name": "+55 91 98852-0097", "phone": "+55 91 98852-0097", "date": "2026-06-03", "time": "22:20"}, {"name": "Railon Pedreira", "phone": "", "date": "2026-06-03", "time": "22:20"}, {"name": "Anderson Barradas", "phone": "", "date": "2026-06-03", "time": "22:20"}, {"name": "+55 75 99179-4811", "phone": "+55 75 99179-4811", "date": "2026-06-03", "time": "22:20"}, {"name": "Jane Banpara", "phone": "", "date": "2026-05-29", "time": "21:11"}, {"name": "+55 21 99495-8207", "phone": "+55 21 99495-8207", "date": "2026-05-29", "time": "13:03"}, {"name": "+55 22 98174-6270", "phone": "+55 22 98174-6270", "date": "2026-05-29", "time": "09:48"}, {"name": "Clayton Moreira", "phone": "", "date": "2026-05-27", "time": ""}, {"name": "+55 91 98606-0018", "phone": "+55 91 98606-0018", "date": "2026-05-27", "time": ""}, {"name": "Victoria Cancela", "phone": "", "date": "2026-05-27", "time": ""}, {"name": "+55 89 98127-4282", "phone": "+55 89 98127-4282", "date": "2026-05-27", "time": ""}, {"name": "+55 91 98200-8754", "phone": "+55 91 98200-8754", "date": "2026-05-27", "time": ""}, {"name": "Canva Kotas", "phone": "", "date": "2026-05-27", "time": ""}, {"name": "Doida", "phone": "", "date": "2026-05-27", "time": ""}, {"name": "+55 11 94019-2450", "phone": "+55 11 94019-2450", "date": "2026-05-26", "time": ""}, {"name": "+55 91 98406-4031", "phone": "+55 91 98406-4031", "date": "2026-05-26", "time": ""}, {"name": "Matheus Campos TRE", "phone": "", "date": "2026-05-26", "time": ""}, {"name": "+55 77 99958-3132", "phone": "+55 77 99958-3132", "date": "2026-05-26", "time": ""}, {"name": "+55 21 97616-3526", "phone": "+55 21 97616-3526", "date": "2026-05-26", "time": ""}, {"name": "+55 91 98540-7833", "phone": "+55 91 98540-7833", "date": "2026-05-26", "time": ""}, {"name": "Cristiano Silva", "phone": "", "date": "2026-05-26", "time": ""}, {"name": "+55 91 99224-4342", "phone": "+55 91 99224-4342", "date": "2026-05-25", "time": ""}, {"name": "Rafael Ponciano", "phone": "", "date": "2026-05-25", "time": ""}, {"name": "+55 11 96917-8912", "phone": "+55 11 96917-8912", "date": "2026-05-25", "time": ""}, {"name": "+55 91 98137-1356", "phone": "+55 91 98137-1356", "date": "2026-05-25", "time": ""}, {"name": "Enzo Tenis", "phone": "", "date": "2026-05-25", "time": ""}, {"name": "+55 85 99956-8475", "phone": "+55 85 99956-8475", "date": "2026-05-25", "time": ""}, {"name": "Nego", "phone": "", "date": "2026-05-25", "time": ""}, {"name": "+55 62 99458-4076", "phone": "+55 62 99458-4076", "date": "2026-05-23", "time": ""}, {"name": "Augusto Morais Band Band Branca", "phone": "", "date": "2026-05-23", "time": ""}, {"name": "Meyre", "phone": "", "date": "2026-05-23", "time": ""}, {"name": "Rogério Miranda Fone", "phone": "", "date": "2026-05-23", "time": ""}, {"name": "+55 35 99945-3897", "phone": "+55 35 99945-3897", "date": "2026-05-23", "time": ""}, {"name": "Rafa", "phone": "", "date": "2026-05-22", "time": ""}, {"name": "EDIANE", "phone": "", "date": "2026-05-22", "time": ""}, {"name": "Adriano Stephanie", "phone": "", "date": "2026-05-22", "time": ""}, {"name": "Antônio Carlos Pedreira", "phone": "", "date": "2026-05-22", "time": ""}, {"name": "+55 21 96469-2927", "phone": "+55 21 96469-2927", "date": "2026-05-22", "time": ""}, {"name": "Edna Alves Ayres", "phone": "", "date": "2026-05-22", "time": ""}, {"name": "+55 91 98213-2440", "phone": "+55 91 98213-2440", "date": "2026-05-21", "time": ""}, {"name": "Rafael Banpara Ventimiglia", "phone": "", "date": "2026-05-21", "time": ""}, {"name": "Eloy Breves", "phone": "", "date": "2026-05-21", "time": ""}, {"name": "Janner", "phone": "", "date": "2026-05-21", "time": ""}, {"name": "Clemilsom", "phone": "", "date": "2026-05-21", "time": ""}, {"name": "Nicole Pastor - SAC SAC #banpara", "phone": "", "date": "2026-05-21", "time": ""}, {"name": "Vó Lucia 2", "phone": "", "date": "2026-05-21", "time": ""}, {"name": "Oliveira BANPARA", "phone": "", "date": "2026-05-21", "time": ""}, {"name": "Socorro Amaral", "phone": "", "date": "2026-05-21", "time": ""}, {"name": "Natalie Auto Escola", "phone": "", "date": "2026-05-21", "time": ""}, {"name": "Mike BANPARA", "phone": "", "date": "2026-05-21", "time": ""}, {"name": "Paulo Setor Setor Setor TRE", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "Márcia Lima", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "Alessandra Alencar", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "+55 91 98553-0772", "phone": "+55 91 98553-0772", "date": "2026-05-20", "time": ""}, {"name": "Katrine Santos", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "Faby BANPARA", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "Bira 2", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "Dyan Reis - Belem", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "Jose Marcel Marcel TRE", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "Claudio Relojoeiro", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "P. Victor BANPARA", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "Bruno SA", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "+55 91 98351-3729", "phone": "+55 91 98351-3729", "date": "2026-05-20", "time": ""}, {"name": "+55 91 98047-7427", "phone": "+55 91 98047-7427", "date": "2026-05-20", "time": ""}, {"name": "Família - Barreto", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "Itacy BANPARA", "phone": "", "date": "2026-05-20", "time": ""}, {"name": "+55 91 98544-7603", "phone": "+55 91 98544-7603", "date": "2026-05-20", "time": ""}, {"name": "+55 91 98129-6417", "phone": "+55 91 98129-6417", "date": "2026-05-20", "time": ""}, {"name": "+55 91 98519-6151", "phone": "+55 91 98519-6151", "date": "2026-05-20", "time": ""}, {"name": "+55 91 99208-7253", "phone": "+55 91 99208-7253", "date": "2026-05-20", "time": ""}, {"name": "+55 68 99250-1493", "phone": "+55 68 99250-1493", "date": "2026-05-19", "time": ""}, {"name": "Interessado Antena", "phone": "", "date": "2026-05-19", "time": ""}, {"name": "+55 85 99635-8455", "phone": "+55 85 99635-8455", "date": "2026-05-19", "time": ""}, {"name": "Família - Barreto", "phone": "", "date": "2026-05-19", "time": ""}, {"name": "Lidia Ramos", "phone": "", "date": "2026-05-19", "time": ""}, {"name": "André Costa Umarizal", "phone": "", "date": "2026-05-19", "time": ""}, {"name": "+55 91 98580-9006", "phone": "+55 91 98580-9006", "date": "2026-05-19", "time": ""}, {"name": "+55 47 99774-7987", "phone": "+55 47 99774-7987", "date": "2026-05-19", "time": ""}, {"name": "Katrine Mg", "phone": "", "date": "2026-05-19", "time": ""}, {"name": "Antonio Salbe", "phone": "", "date": "2026-05-19", "time": ""}, {"name": "Yuri", "phone": "", "date": "2026-05-19", "time": ""}, {"name": "Nelson", "phone": "", "date": "2026-05-19", "time": ""}, {"name": "+55 91 98715-0112", "phone": "+55 91 98715-0112", "date": "2026-05-18", "time": ""}, {"name": "Cleber Silva", "phone": "", "date": "2026-05-18", "time": ""}, {"name": "Interessado Iphone Lu", "phone": "", "date": "2026-05-18", "time": ""}, {"name": "Paulinho Ed. Anilo Anilo Cardoso", "phone": "", "date": "2026-05-18", "time": ""}, {"name": "+55 11 99749-0895", "phone": "+55 11 99749-0895", "date": "2026-05-18", "time": ""}, {"name": "+55 42 99836-0829", "phone": "+55 42 99836-0829", "date": "2026-05-18", "time": ""}, {"name": "Alisson Sa", "phone": "", "date": "2026-05-17", "time": ""}, {"name": "+55 81 98576-6232", "phone": "+55 81 98576-6232", "date": "2026-05-17", "time": ""}, {"name": "+55 48 98501-0590", "phone": "+55 48 98501-0590", "date": "2026-05-17", "time": ""}, {"name": "Lucas Santana Ag Digital", "phone": "", "date": "2026-05-17", "time": ""}, {"name": "Alexandre (Espaço Digital)", "phone": "", "date": "2026-05-16", "time": ""}, {"name": "Robert TRE", "phone": "", "date": "2026-05-16", "time": ""}, {"name": "Caio Gabriel", "phone": "", "date": "2026-05-15", "time": ""}, {"name": "+55 21 98104-9755", "phone": "+55 21 98104-9755", "date": "2026-05-15", "time": ""}, {"name": "Reginaldo Setor", "phone": "", "date": "2026-05-15", "time": ""}, {"name": "+55 15 99795-6413", "phone": "+55 15 99795-6413", "date": "2026-05-15", "time": ""}, {"name": "+55 15 98817-2611", "phone": "+55 15 98817-2611", "date": "2026-05-15", "time": ""}, {"name": "Interessado Antena", "phone": "", "date": "2026-05-15", "time": ""}, {"name": "Marlise", "phone": "", "date": "2026-05-15", "time": ""}, {"name": "Amanda Salbé", "phone": "", "date": "2026-05-15", "time": ""}, {"name": "Eduardo Kaizer", "phone": "", "date": "2026-05-15", "time": ""}, {"name": "+55 41 98448-0239", "phone": "+55 41 98448-0239", "date": "2026-05-15", "time": ""}, {"name": "+55 35 99805-1055", "phone": "+55 35 99805-1055", "date": "2026-05-14", "time": ""}, {"name": "Victor", "phone": "", "date": "2026-05-14", "time": ""}, {"name": "Tia hedy", "phone": "", "date": "2026-05-14", "time": ""}, {"name": "+55 16 99762-8468", "phone": "+55 16 99762-8468", "date": "2026-05-14", "time": ""}, {"name": "+55 91 99811-1873", "phone": "+55 91 99811-1873", "date": "2026-05-14", "time": ""}, {"name": "Alan Serralheiro", "phone": "", "date": "2026-05-14", "time": ""}, {"name": "Tyrone Caixinha", "phone": "", "date": "2026-05-14", "time": ""}, {"name": "+55 91 99173-7973", "phone": "+55 91 99173-7973", "date": "2026-05-14", "time": ""}, {"name": "Tia Odília", "phone": "", "date": "2026-05-13", "time": ""}, {"name": "Alexandre Maradei Maradei TRE", "phone": "", "date": "2026-05-13", "time": ""}, {"name": "+55 21 97208-7701", "phone": "+55 21 97208-7701", "date": "2026-05-13", "time": ""}, {"name": "Flavio prof", "phone": "", "date": "2026-05-13", "time": ""}, {"name": "Nandara", "phone": "", "date": "2026-05-13", "time": ""}, {"name": "Catarina TRE", "phone": "", "date": "2026-05-13", "time": ""}, {"name": "Andrea Piçarreira", "phone": "", "date": "2026-05-13", "time": ""}, {"name": "Bruno", "phone": "", "date": "2026-05-13", "time": ""}, {"name": "Carlos H", "phone": "", "date": "2026-05-13", "time": ""}, {"name": "+55 91 99311-8324", "phone": "+55 91 99311-8324", "date": "2026-05-13", "time": ""}, {"name": "kayo Alves", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Alef Fernandes", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Augusto Lisboa Guia Santarem", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "P. Victor BANPARA", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Sidney Película", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Rute Sp", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Carlos Lisboa", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Daniel Physics", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Cintia Brito", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Eric Fernando", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "+55 91 99335-8541", "phone": "+55 91 99335-8541", "date": "2026-05-12", "time": ""}, {"name": "+55 21 98900-8806", "phone": "+55 21 98900-8806", "date": "2026-05-12", "time": ""}, {"name": "Jancy Express", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "+55 21 99139-8141", "phone": "+55 21 99139-8141", "date": "2026-05-12", "time": ""}, {"name": "Ana Rita", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Calipso", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Carlos SP", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Carteiro", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Quinha", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Bob TRE", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Chaveiro Andrade", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Andrew FP 04 04 B", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "+55 91 98872-0941", "phone": "+55 91 98872-0941", "date": "2026-05-12", "time": ""}, {"name": "+55 21 98887-3372", "phone": "+55 21 98887-3372", "date": "2026-05-12", "time": ""}, {"name": "Nelson Pedreira", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Adel", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Tia Nó", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "William Lola", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Tatá", "phone": "", "date": "2026-05-12", "time": ""}, {"name": "Thaimyson", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "Thiago Neves TRE", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "Flavio Fisica", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "+55 91 98177-8809", "phone": "+55 91 98177-8809", "date": "2026-05-11", "time": ""}, {"name": "Fabio Xerfan Saque E Pague", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "Núbia Nanda SSD", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "Rayane", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "Roberta Ayres", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "Antônia Dutra Refeição Municipalidade", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "+55 85 99775-1777", "phone": "+55 85 99775-1777", "date": "2026-05-11", "time": ""}, {"name": "Faustino Acara", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "Charles Entregador", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "Botracharia", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "Beto / Belem", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "cad4zin", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "+55 91 99282-5748", "phone": "+55 91 99282-5748", "date": "2026-05-11", "time": ""}, {"name": "Interessado Antena Facebook", "phone": "", "date": "2026-05-11", "time": ""}, {"name": "+55 91 98956-7098", "phone": "+55 91 98956-7098", "date": "2026-05-11", "time": ""}, {"name": "+55 91 98085-9723", "phone": "+55 91 98085-9723", "date": "2026-05-11", "time": ""}, {"name": "+55 91 98831-6855", "phone": "+55 91 98831-6855", "date": "2026-05-11", "time": ""}, {"name": "+55 91 99906-1401", "phone": "+55 91 99906-1401", "date": "2026-05-11", "time": ""}, {"name": "Gustavo SP", "phone": "", "date": "2026-05-10", "time": ""}, {"name": "Tio junio", "phone": "", "date": "2026-05-10", "time": ""}, {"name": "Isaías Cardoso", "phone": "", "date": "2026-05-10", "time": ""}, {"name": "+55 91 98129-0312", "phone": "+55 91 98129-0312", "date": "2026-05-10", "time": ""}, {"name": "+55 91 98620-2649", "phone": "+55 91 98620-2649", "date": "2026-05-10", "time": ""}, {"name": "+55 91 98298-8800", "phone": "+55 91 98298-8800", "date": "2026-05-10", "time": ""}, {"name": "Entregador Magalu", "phone": "", "date": "2026-05-10", "time": ""}, {"name": "Elaine Rita", "phone": "", "date": "2026-05-10", "time": ""}, {"name": "Entregador Marciano", "phone": "", "date": "2026-05-10", "time": ""}, {"name": "Tia Lindalva", "phone": "", "date": "2026-05-10", "time": ""}, {"name": "+55 21 96800-6944", "phone": "+55 21 96800-6944", "date": "2026-05-10", "time": ""}, {"name": "+55 21 99612-4127", "phone": "+55 21 99612-4127", "date": "2026-05-10", "time": ""}, {"name": "Marconi", "phone": "", "date": "2026-05-10", "time": ""}, {"name": "+55 91 98055-3764", "phone": "+55 91 98055-3764", "date": "2026-05-10", "time": ""}, {"name": "+55 91 98927-3383", "phone": "+55 91 98927-3383", "date": "2026-05-10", "time": ""}, {"name": "+55 91 98951-5195", "phone": "+55 91 98951-5195", "date": "2026-05-10", "time": ""}, {"name": "Tia franci", "phone": "", "date": "2026-05-10", "time": ""}, {"name": "+55 81 99896-1507", "phone": "+55 81 99896-1507", "date": "2026-05-10", "time": ""}, {"name": "FRANK PIMENTEL", "phone": "", "date": "2026-05-10", "time": ""}, {"name": "Didi Dos Cachorros", "phone": "", "date": "2026-05-09", "time": ""}, {"name": "Mateus Araújo", "phone": "", "date": "2026-05-09", "time": ""}, {"name": "Entregador Marciano", "phone": "", "date": "2026-05-09", "time": ""}, {"name": "+55 91 98450-9841", "phone": "+55 91 98450-9841", "date": "2026-05-09", "time": ""}, {"name": "Allangueiby Estevam", "phone": "", "date": "2026-05-09", "time": ""}, {"name": "+55 85 99962-3314", "phone": "+55 85 99962-3314", "date": "2026-05-09", "time": ""}, {"name": "+55 91 98133-9508", "phone": "+55 91 98133-9508", "date": "2026-05-09", "time": ""}, {"name": "+55 91 98243-4141", "phone": "+55 91 98243-4141", "date": "2026-05-09", "time": ""}, {"name": "+55 91 98939-0339", "phone": "+55 91 98939-0339", "date": "2026-05-09", "time": ""}, {"name": "+55 91 98499-8929", "phone": "+55 91 98499-8929", "date": "2026-05-09", "time": ""}, {"name": "Bernardo", "phone": "", "date": "2026-05-09", "time": ""}, {"name": "+55 91 98451-3746", "phone": "+55 91 98451-3746", "date": "2026-05-09", "time": ""}, {"name": "Robertinho", "phone": "", "date": "2026-05-09", "time": ""}, {"name": "+55 11 98383-6829", "phone": "+55 11 98383-6829", "date": "2026-05-09", "time": ""}, {"name": "+55 73 99812-0326", "phone": "+55 73 99812-0326", "date": "2026-05-09", "time": ""}, {"name": "Sabrinha Salao", "phone": "", "date": "2026-05-09", "time": ""}, {"name": "+55 27 99286-8105", "phone": "+55 27 99286-8105", "date": "2026-05-09", "time": ""}, {"name": "Gabi SP", "phone": "", "date": "2026-05-09", "time": ""}, {"name": "Maurinho Celular", "phone": "", "date": "2026-05-09", "time": ""}];
+const ENTRADAS=[{"name": "Johabe BANPARA", "date": "2026-05-09", "time": "18:50:26", "tipo": "Adicionado por admin"}, {"name": "Lucas SA", "date": "2026-05-09", "time": "18:50:26", "tipo": "Adicionado por admin"}, {"name": "Gabriel Salbé Salbé TIM", "date": "2026-05-09", "time": "18:51:36", "tipo": "Link/Convite"}, {"name": "Alef Fernandes", "date": "2026-05-09", "time": "18:57:22", "tipo": "Adicionado por admin"}, {"name": "Ana Paula Noia", "date": "2026-05-09", "time": "18:57:22", "tipo": "Adicionado por admin"}, {"name": "Aline Serpa", "date": "2026-05-09", "time": "19:01:36", "tipo": "Adicionado por Davi Salbé"}, {"name": "Allangueiby Estevam", "date": "2026-05-09", "time": "19:01:36", "tipo": "Adicionado por Davi Salbé"}, {"name": "Gabriel Tui", "date": "2026-05-09", "time": "19:07:07", "tipo": "Adicionado por Davi Salbé"}, {"name": "Sabrinha Salao", "date": "2026-05-09", "time": "19:07:07", "tipo": "Adicionado por Davi Salbé"}, {"name": "~ Daniel", "date": "2026-05-09", "time": "19:21:01", "tipo": "Link/Convite"}, {"name": "Brenda Neura", "date": "2026-05-09", "time": "19:25:22", "tipo": "Adicionado por admin"}, {"name": "Jonathan Alanio", "date": "2026-05-09", "time": "19:25:22", "tipo": "Adicionado por admin"}, {"name": "Melquisedeque Zé Da Manga", "date": "2026-05-09", "time": "19:25:22", "tipo": "Adicionado por admin"}, {"name": "Rogério Miranda Fone", "date": "2026-05-09", "time": "19:28:45", "tipo": "Link/Convite"}, {"name": "~ P.V 🥋", "date": "2026-05-09", "time": "19:34:31", "tipo": "Link/Convite"}, {"name": "~ Fabinho", "date": "2026-05-09", "time": "19:37:55", "tipo": "Link/Convite"}, {"name": "Gabriel Claro Motorola", "date": "2026-05-09", "time": "19:39:22", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "~ 🖥️🖱️", "date": "2026-05-09", "time": "19:41:18", "tipo": "Link/Convite"}, {"name": "~ Luiz", "date": "2026-05-09", "time": "19:50:04", "tipo": "Link/Convite"}, {"name": "~ Diogo Cavalcante", "date": "2026-05-09", "time": "19:54:15", "tipo": "Link/Convite"}, {"name": "~ Anderson Rodrigues", "date": "2026-05-09", "time": "20:27:14", "tipo": "Link/Convite"}, {"name": "~ Rodrigo Ratan", "date": "2026-05-09", "time": "20:28:45", "tipo": "Link/Convite"}, {"name": "Lorena", "date": "2026-05-09", "time": "20:37:13", "tipo": "Link/Convite"}, {"name": "Kl", "date": "2026-05-09", "time": "20:38:18", "tipo": "Link/Convite"}, {"name": "~ Glauber", "date": "2026-05-09", "time": "20:39:03", "tipo": "Link/Convite"}, {"name": "‪+55 91 98346‑8070‬", "date": "2026-05-09", "time": "20:39:52", "tipo": "Link/Convite"}, {"name": "~ - -", "date": "2026-05-09", "time": "20:45:12", "tipo": "Link/Convite"}, {"name": "Vitor Pedreira", "date": "2026-05-09", "time": "20:52:28", "tipo": "Link/Convite"}, {"name": "~ Haylton", "date": "2026-05-09", "time": "20:53:23", "tipo": "Link/Convite"}, {"name": "‪+55 91 99397‑0962‬", "date": "2026-05-09", "time": "21:06:23", "tipo": "Link/Convite"}, {"name": "Ícaro Campelo Tenis", "date": "2026-05-09", "time": "21:08:11", "tipo": "Link/Convite"}, {"name": "‪+55 91 99811‑1873‬", "date": "2026-05-09", "time": "21:17:03", "tipo": "Link/Convite"}, {"name": "Mikaela", "date": "2026-05-09", "time": "21:22:16", "tipo": "Link/Convite"}, {"name": "Henrique PEDREIRA", "date": "2026-05-09", "time": "21:26:52", "tipo": "Adicionado por Davi Salbé"}, {"name": "Isabella Scardino", "date": "2026-05-09", "time": "21:26:52", "tipo": "Adicionado por Davi Salbé"}, {"name": "Taliane Silva", "date": "2026-05-09", "time": "21:30:58", "tipo": "Link/Convite"}, {"name": "Ana Rita", "date": "2026-05-09", "time": "21:42:47", "tipo": "Link/Convite"}, {"name": "~ Jony Forte", "date": "2026-05-09", "time": "21:57:35", "tipo": "Link/Convite"}, {"name": "Clayton Moreira", "date": "2026-05-09", "time": "22:41:28", "tipo": "Link/Convite"}, {"name": "Ana Pimentel", "date": "2026-05-09", "time": "23:33:16", "tipo": "Adicionado por admin"}, {"name": "Andre est BANPARA", "date": "2026-05-09", "time": "23:33:16", "tipo": "Adicionado por admin"}, {"name": "~ Christian Nascimento", "date": "2026-05-09", "time": "23:37:44", "tipo": "Link/Convite"}, {"name": "Vinícius Cimadon", "date": "2026-05-09", "time": "23:38:41", "tipo": "Link/Convite"}, {"name": "Sheila Barbosa", "date": "2026-05-10", "time": "00:09:57", "tipo": "Link/Convite"}, {"name": "~ Paulo Vitor Guimarães", "date": "2026-05-10", "time": "00:27:00", "tipo": "Link/Convite"}, {"name": "Scarlet Central", "date": "2026-05-10", "time": "00:54:54", "tipo": "Link/Convite"}, {"name": "Angra TRE", "date": "2026-05-10", "time": "03:51:29", "tipo": "Link/Convite"}, {"name": "‪+55 91 99838‑7802‬", "date": "2026-05-10", "time": "05:01:22", "tipo": "Link/Convite"}, {"name": "Andre JW", "date": "2026-05-10", "time": "05:27:44", "tipo": "Link/Convite"}, {"name": "Tia hedy", "date": "2026-05-10", "time": "06:39:33", "tipo": "Link/Convite"}, {"name": "Fernando Góes", "date": "2026-05-10", "time": "07:24:19", "tipo": "Link/Convite"}, {"name": "JannerAraújo Keith Paula", "date": "2026-05-10", "time": "07:35:19", "tipo": "Link/Convite"}, {"name": "~ Victor Guerreiro", "date": "2026-05-10", "time": "10:47:28", "tipo": "Link/Convite"}, {"name": "Jane Banpara", "date": "2026-05-10", "time": "11:39:07", "tipo": "Link/Convite"}, {"name": "Izaias", "date": "2026-05-10", "time": "12:03:17", "tipo": "Link/Convite"}, {"name": "‪+55 93 98411‑7284‬", "date": "2026-05-10", "time": "13:31:51", "tipo": "Link/Convite"}, {"name": "Irmã Simone Simone Prainha", "date": "2026-05-10", "time": "13:42:31", "tipo": "Link/Convite"}, {"name": "‪+55 93 98415‑3733‬", "date": "2026-05-10", "time": "23:06:53", "tipo": "Link/Convite"}, {"name": "Gabriel Disparo", "date": "2026-05-11", "time": "06:26:22", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "‪+55 93 98403‑1695‬", "date": "2026-05-11", "time": "08:17:56", "tipo": "Link/Convite"}, {"name": "~ Jorge", "date": "2026-05-11", "time": "08:32:39", "tipo": "Link/Convite"}, {"name": "~ Low’D", "date": "2026-05-11", "time": "09:40:30", "tipo": "Link/Convite"}, {"name": "Adel", "date": "2026-05-11", "time": "14:33:38", "tipo": "Adicionado por Gabriel Disparo"}, {"name": "Amanda Salbé", "date": "2026-05-11", "time": "14:33:38", "tipo": "Adicionado por Gabriel Disparo"}, {"name": "Alisson Sa", "date": "2026-05-11", "time": "14:43:05", "tipo": "Adicionado por admin"}, {"name": "André Serra", "date": "2026-05-11", "time": "14:43:05", "tipo": "Adicionado por admin"}, {"name": "Bruna Amaral", "date": "2026-05-11", "time": "15:04:49", "tipo": "Link/Convite"}, {"name": "Alessandra Alencar", "date": "2026-05-11", "time": "15:13:18", "tipo": "Adicionado por Gabriel Disparo"}, {"name": "Alan Serralheiro", "date": "2026-05-11", "time": "17:21:25", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "Alexandre (Espaço (Espaço Digital)", "date": "2026-05-11", "time": "17:21:25", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "You", "date": "2026-05-11", "time": "17:52:58", "tipo": "Link/Convite"}, {"name": "~ Pedro", "date": "2026-05-11", "time": "17:53:49", "tipo": "Link/Convite"}, {"name": "Alana", "date": "2026-05-11", "time": "19:25:47", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "Edielson", "date": "2026-05-11", "time": "19:25:47", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "‪+55 38 99878‑7443‬", "date": "2026-05-11", "time": "20:17:09", "tipo": "Adicionado por Katrine Mg"}, {"name": "Savio Boleiro", "date": "2026-05-11", "time": "20:22:58", "tipo": "Adicionado por admin"}, {"name": "Scooby Geser", "date": "2026-05-11", "time": "20:22:58", "tipo": "Adicionado por admin"}, {"name": "~ 💬", "date": "2026-05-12", "time": "09:14:08", "tipo": "Link/Convite"}, {"name": "~ 斉藤 アラン", "date": "2026-05-12", "time": "11:25:07", "tipo": "Link/Convite"}, {"name": "~ Roger", "date": "2026-05-12", "time": "11:26:16", "tipo": "Link/Convite"}, {"name": "Alessandro TRE", "date": "2026-05-12", "time": "11:27:38", "tipo": "Adicionado por admin"}, {"name": "Alexandre Maradei Maradei TRE", "date": "2026-05-12", "time": "11:27:38", "tipo": "Adicionado por admin"}, {"name": "~ Bruno Pamplona", "date": "2026-05-12", "time": "14:34:01", "tipo": "Link/Convite"}, {"name": "P. Henrique Vizinho", "date": "2026-05-12", "time": "14:41:52", "tipo": "Link/Convite"}, {"name": "Lidia Ramos", "date": "2026-05-12", "time": "15:33:29", "tipo": "Link/Convite"}, {"name": "Stanley Ferreira", "date": "2026-05-12", "time": "16:25:23", "tipo": "Link/Convite"}, {"name": "‪+55 91 98704‑2174‬", "date": "2026-05-12", "time": "16:36:27", "tipo": "Adicionado por ‪+55 91 98469‑8506‬"}, {"name": "Max", "date": "2026-05-12", "time": "18:26:48", "tipo": "Link/Convite"}, {"name": "Alex Prainha", "date": "2026-05-12", "time": "19:53:41", "tipo": "Link/Convite"}, {"name": "~ Rianda Salbé 💕🌻", "date": "2026-05-12", "time": "22:17:13", "tipo": "Link/Convite"}, {"name": "‪+55 91 98540‑7833‬", "date": "2026-05-13", "time": "11:51:33", "tipo": "Adicionado por Ana Pimentel"}, {"name": "Stephanie Central", "date": "2026-05-13", "time": "14:52:49", "tipo": "Link/Convite"}, {"name": "Catarina TRE", "date": "2026-05-13", "time": "15:28:48", "tipo": "Adicionado por admin"}, {"name": "Duda", "date": "2026-05-13", "time": "15:28:48", "tipo": "Adicionado por admin"}, {"name": "Mariado Carmo", "date": "2026-05-13", "time": "16:33:59", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "Nandara", "date": "2026-05-13", "time": "16:33:59", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "Luciley Salbé", "date": "2026-05-13", "time": "18:10:48", "tipo": "Link/Convite"}, {"name": "‪+55 19 97417‑7649‬", "date": "2026-05-14", "time": "09:37:34", "tipo": "Link/Convite"}, {"name": "‪+55 19 98140‑2148‬", "date": "2026-05-14", "time": "09:41:10", "tipo": "Link/Convite"}, {"name": "~ Jéverson", "date": "2026-05-14", "time": "11:59:13", "tipo": "Link/Convite"}, {"name": "~ Piriquito ( Piri Bike )", "date": "2026-05-14", "time": "12:09:03", "tipo": "Link/Convite"}, {"name": "~ pedrin", "date": "2026-05-14", "time": "12:19:49", "tipo": "Link/Convite"}, {"name": "~ Caio", "date": "2026-05-14", "time": "12:50:41", "tipo": "Link/Convite"}, {"name": "~ Suiciniv 🎱", "date": "2026-05-14", "time": "12:58:35", "tipo": "Link/Convite"}, {"name": "~ Diogo Lessa", "date": "2026-05-14", "time": "13:40:40", "tipo": "Link/Convite"}, {"name": "‪+55 21 99333‑4111‬", "date": "2026-05-15", "time": "02:49:15", "tipo": "Link/Convite"}, {"name": "‪+55 62 99458‑4076‬", "date": "2026-05-15", "time": "06:28:43", "tipo": "Link/Convite"}, {"name": "~ Fabricio S", "date": "2026-05-15", "time": "08:15:24", "tipo": "Link/Convite"}, {"name": "~ Raul Dias", "date": "2026-05-15", "time": "16:58:24", "tipo": "Link/Convite"}, {"name": "~ Vinicius Rocha", "date": "2026-05-15", "time": "16:58:24", "tipo": "Link/Convite"}, {"name": "~ Matheus", "date": "2026-05-15", "time": "17:06:58", "tipo": "Link/Convite"}, {"name": "~ Márcio", "date": "2026-05-15", "time": "20:14:06", "tipo": "Link/Convite"}, {"name": "Marcelo Alencar Eetepa", "date": "2026-05-15", "time": "22:29:24", "tipo": "Link/Convite"}, {"name": "~ Franklin Lima", "date": "2026-05-17", "time": "14:46:56", "tipo": "Link/Convite"}, {"name": "‪+55 67 99898‑7932‬", "date": "2026-05-17", "time": "14:48:36", "tipo": "Link/Convite"}, {"name": "‪+55 21 96469‑2927‬", "date": "2026-05-17", "time": "14:48:43", "tipo": "Link/Convite"}, {"name": "~ Márcio", "date": "2026-05-17", "time": "14:50:09", "tipo": "Link/Convite"}, {"name": "‪+55 47 99774‑7987‬", "date": "2026-05-17", "time": "14:51:35", "tipo": "Link/Convite"}, {"name": "‪+55 65 99332‑1721‬", "date": "2026-05-17", "time": "14:53:05", "tipo": "Link/Convite"}, {"name": "~ Naldo", "date": "2026-05-17", "time": "15:07:08", "tipo": "Link/Convite"}, {"name": "~ .", "date": "2026-05-17", "time": "15:46:23", "tipo": "Link/Convite"}, {"name": "‪+55 28 99939‑8834‬", "date": "2026-05-17", "time": "16:01:19", "tipo": "Link/Convite"}, {"name": "‪+55 42 99836‑0829‬", "date": "2026-05-17", "time": "17:00:31", "tipo": "Link/Convite"}, {"name": "~ Thiago ☁️", "date": "2026-05-17", "time": "17:42:47", "tipo": "Link/Convite"}, {"name": "~ galega", "date": "2026-05-17", "time": "18:46:22", "tipo": "Link/Convite"}, {"name": "~ Carlod", "date": "2026-05-17", "time": "18:59:04", "tipo": "Link/Convite"}, {"name": "‪+63 946 760 7638‬", "date": "2026-05-18", "time": "06:40:38", "tipo": "Link/Convite"}, {"name": "‪+55 33 99110‑2836‬", "date": "2026-05-19", "time": "15:02:04", "tipo": "Link/Convite"}, {"name": "‪+55 48 99987‑5835‬", "date": "2026-05-19", "time": "15:43:02", "tipo": "Link/Convite"}, {"name": "‪+55 48 99165‑3332‬", "date": "2026-05-19", "time": "21:16:57", "tipo": "Link/Convite"}, {"name": "~ Paula da Publicitar", "date": "2026-05-19", "time": "21:22:48", "tipo": "Link/Convite"}, {"name": "~ Antônio Barros", "date": "2026-05-19", "time": "21:26:25", "tipo": "Link/Convite"}, {"name": "‪+55 55 99941‑7980‬", "date": "2026-05-19", "time": "21:54:33", "tipo": "Link/Convite"}, {"name": "Interessado Antena", "date": "2026-05-19", "time": "22:43:26", "tipo": "Link/Convite"}, {"name": "~ Vitor Reis", "date": "2026-05-19", "time": "23:07:43", "tipo": "Link/Convite"}, {"name": "~ Caio Costa", "date": "2026-05-19", "time": "23:26:09", "tipo": "Link/Convite"}, {"name": "‪+55 91 98820‑0005‬", "date": "2026-05-19", "time": "23:30:14", "tipo": "Link/Convite"}, {"name": "‪+55 68 99250‑1493‬", "date": "2026-05-19", "time": "23:37:47", "tipo": "Link/Convite"}, {"name": "‪+55 91 99840‑4780‬", "date": "2026-05-20", "time": "05:10:01", "tipo": "Link/Convite"}, {"name": "~ RD👺", "date": "2026-05-20", "time": "05:30:27", "tipo": "Link/Convite"}, {"name": "~ Paty 💗", "date": "2026-05-20", "time": "06:26:42", "tipo": "Link/Convite"}, {"name": "Cláudio Márcio Márcio TRE", "date": "2026-05-20", "time": "07:33:01", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "P. Victor BANPARA", "date": "2026-05-20", "time": "07:33:01", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "~ Vitor Silva", "date": "2026-05-20", "time": "09:40:46", "tipo": "Link/Convite"}, {"name": "‪+55 61 98242‑7443‬", "date": "2026-05-20", "time": "10:26:49", "tipo": "Link/Convite"}, {"name": "~ nazas2869", "date": "2026-05-20", "time": "10:41:52", "tipo": "Link/Convite"}, {"name": "~ Guilherme🍂", "date": "2026-05-20", "time": "11:42:03", "tipo": "Link/Convite"}, {"name": "~ Eduarda", "date": "2026-05-20", "time": "13:00:19", "tipo": "Link/Convite"}, {"name": "‪+55 91 98148‑7161‬", "date": "2026-05-20", "time": "13:05:18", "tipo": "Link/Convite"}, {"name": "Aline BANPARA", "date": "2026-05-20", "time": "13:26:48", "tipo": "Adicionado por admin"}, {"name": "Gabriel BANPARA", "date": "2026-05-20", "time": "13:26:48", "tipo": "Adicionado por admin"}, {"name": "Adriano Stephanie", "date": "2026-05-20", "time": "14:35:10", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "Alexandre Daltro", "date": "2026-05-20", "time": "14:35:10", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "Dyan Reis - Belem", "date": "2026-05-20", "time": "16:33:06", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "Ezequias TRE TRE 2020", "date": "2026-05-20", "time": "16:33:06", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "Leo", "date": "2026-05-20", "time": "16:47:14", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "‪+55 48 99965‑3964‬", "date": "2026-05-20", "time": "19:27:47", "tipo": "Link/Convite"}, {"name": "‪+55 91 98553‑0772‬", "date": "2026-05-20", "time": "20:03:42", "tipo": "Link/Convite"}, {"name": "‪+55 11 96917‑8912‬", "date": "2026-05-20", "time": "21:32:13", "tipo": "Link/Convite"}, {"name": "Mae Do Lenon", "date": "2026-05-20", "time": "22:06:28", "tipo": "Adicionado por admin"}, {"name": "Natalie Auto Escola", "date": "2026-05-20", "time": "22:06:28", "tipo": "Adicionado por admin"}, {"name": "Márcia Lima", "date": "2026-05-20", "time": "22:07:19", "tipo": "Link/Convite"}, {"name": "Jorge Santos TJ Pedreira Pedreira PR", "date": "2026-05-21", "time": "13:41:22", "tipo": "Adicionado por admin"}, {"name": "EDIANE", "date": "2026-05-22", "time": "12:50:46", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "~ Dr Aírton Camilo Leite Munhoz", "date": "2026-05-24", "time": "19:27:37", "tipo": "Link/Convite"}, {"name": "‪+55 98 98738‑1452‬", "date": "2026-05-24", "time": "19:52:13", "tipo": "Link/Convite"}, {"name": "‪+55 11 94168‑5836‬", "date": "2026-05-25", "time": "00:35:44", "tipo": "Link/Convite"}, {"name": "‪+55 75 99179‑4811‬", "date": "2026-05-25", "time": "10:24:21", "tipo": "Link/Convite"}, {"name": "‪+55 87 99995‑2186‬", "date": "2026-05-25", "time": "11:42:11", "tipo": "Link/Convite"}, {"name": "‪+55 11 94753‑7053‬", "date": "2026-05-25", "time": "11:45:09", "tipo": "Link/Convite"}, {"name": "~ Caio Viana", "date": "2026-05-25", "time": "18:32:41", "tipo": "Link/Convite"}, {"name": "‪+55 91 98732‑7547‬", "date": "2026-05-25", "time": "18:33:27", "tipo": "Link/Convite"}, {"name": "~ 🥰🤪", "date": "2026-05-25", "time": "18:39:05", "tipo": "Link/Convite"}, {"name": "~ Yuji", "date": "2026-05-25", "time": "18:44:38", "tipo": "Link/Convite"}, {"name": "Josi Banpara", "date": "2026-05-25", "time": "18:57:12", "tipo": "Link/Convite"}, {"name": "‪+55 91 98895‑0233‬", "date": "2026-05-25", "time": "19:04:09", "tipo": "Link/Convite"}, {"name": "~ MASTER DJ LEANDRO BOY", "date": "2026-05-25", "time": "19:46:57", "tipo": "Link/Convite"}, {"name": "~ XAVIER RESOLV", "date": "2026-05-25", "time": "20:03:56", "tipo": "Link/Convite"}, {"name": "~ Tz41", "date": "2026-05-25", "time": "20:07:48", "tipo": "Link/Convite"}, {"name": "~ Castro", "date": "2026-05-25", "time": "21:46:50", "tipo": "Link/Convite"}, {"name": "~ Central", "date": "2026-05-26", "time": "00:19:00", "tipo": "Link/Convite"}, {"name": "‪+55 12 98269‑7038‬", "date": "2026-05-26", "time": "15:26:38", "tipo": "Link/Convite"}, {"name": "‪+55 51 99766‑6945‬", "date": "2026-05-26", "time": "16:16:16", "tipo": "Link/Convite"}, {"name": "‪+55 48 99962‑4495‬", "date": "2026-05-26", "time": "17:17:19", "tipo": "Link/Convite"}, {"name": "~ Marcos", "date": "2026-05-26", "time": "18:11:15", "tipo": "Link/Convite"}, {"name": "~ Lorena Martins/Lorebeauty", "date": "2026-05-26", "time": "18:22:18", "tipo": "Link/Convite"}, {"name": "Matheus Campos TRE", "date": "2026-05-26", "time": "19:04:49", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "‪+55 21 99495‑8207‬", "date": "2026-05-26", "time": "22:34:21", "tipo": "Link/Convite"}, {"name": "‪+55 91 98072‑0679‬", "date": "2026-05-27", "time": "00:14:18", "tipo": "Link/Convite"}, {"name": "Doida", "date": "2026-05-27", "time": "09:05:13", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "Canva Kotas", "date": "2026-05-27", "time": "09:12:03", "tipo": "Link/Convite"}, {"name": "‪+55 19 93624‑0278‬", "date": "2026-05-27", "time": "11:33:55", "tipo": "Link/Convite"}, {"name": "Victoria Cancela", "date": "2026-05-27", "time": "12:25:30", "tipo": "Link/Convite"}, {"name": "‪+55 91 98466‑3821‬", "date": "2026-05-27", "time": "12:30:10", "tipo": "Link/Convite"}, {"name": "Gabriel NT", "date": "2026-05-27", "time": "12:32:41", "tipo": "Link/Convite"}, {"name": "Levi SA", "date": "2026-05-27", "time": "12:41:00", "tipo": "Link/Convite"}, {"name": "Laura Neiva", "date": "2026-05-27", "time": "12:41:58", "tipo": "Link/Convite"}, {"name": "Darlene Palheta", "date": "2026-05-27", "time": "12:42:45", "tipo": "Link/Convite"}, {"name": "Nicole", "date": "2026-05-27", "time": "12:55:02", "tipo": "Link/Convite"}, {"name": "‪+55 91 98766‑0321‬", "date": "2026-05-27", "time": "16:05:54", "tipo": "Link/Convite"}, {"name": "‪+55 91 98555‑8528‬", "date": "2026-05-27", "time": "17:32:41", "tipo": "Link/Convite"}, {"name": "‪+55 14 98130‑3022‬", "date": "2026-05-28", "time": "13:01:07", "tipo": "Link/Convite"}, {"name": "Marcos Pantoja Caixinha", "date": "2026-05-29", "time": "08:29:32", "tipo": "Link/Convite"}, {"name": "‪+55 11 92205‑7536‬", "date": "2026-05-29", "time": "09:20:06", "tipo": "Link/Convite"}, {"name": "‪+55 22 98174‑6270‬", "date": "2026-05-29", "time": "09:43:39", "tipo": "Link/Convite"}, {"name": "‪+55 49 92004‑4654‬", "date": "2026-05-29", "time": "16:43:11", "tipo": "Link/Convite"}, {"name": "‪+55 83 98653‑3905‬", "date": "2026-05-30", "time": "15:55:42", "tipo": "Link/Convite"}, {"name": "~ Bruninha🧿", "date": "2026-05-31", "time": "20:09:21", "tipo": "Link/Convite"}, {"name": "‪+55 16 95782‑7588‬", "date": "2026-05-31", "time": "20:09:22", "tipo": "Link/Convite"}, {"name": "~ darry Nail designs 🙌🏾🙏🏾", "date": "2026-05-31", "time": "20:36:29", "tipo": "Link/Convite"}, {"name": "~ Natália Leite", "date": "2026-05-31", "time": "20:45:56", "tipo": "Link/Convite"}, {"name": "~ 🥰🤪", "date": "2026-05-31", "time": "20:48:00", "tipo": "Link/Convite"}, {"name": "‪+55 91 98219‑6285‬", "date": "2026-05-31", "time": "21:06:33", "tipo": "Link/Convite"}, {"name": "~ McL", "date": "2026-05-31", "time": "21:30:09", "tipo": "Link/Convite"}, {"name": "~ Eliza Boni", "date": "2026-05-31", "time": "22:07:18", "tipo": "Link/Convite"}, {"name": "~ Eduardo Marques", "date": "2026-05-31", "time": "22:57:44", "tipo": "Link/Convite"}, {"name": "‪+55 91 98156‑4505‬", "date": "2026-06-01", "time": "00:56:31", "tipo": "Link/Convite"}, {"name": "~ Edson Campos Jose", "date": "2026-06-01", "time": "02:33:02", "tipo": "Link/Convite"}, {"name": "~ 😎😅🤝👍🤑🧐", "date": "2026-06-01", "time": "03:59:54", "tipo": "Link/Convite"}, {"name": "~ Erick Alencar", "date": "2026-06-01", "time": "05:29:14", "tipo": "Link/Convite"}, {"name": "~ Dias", "date": "2026-06-01", "time": "05:47:59", "tipo": "Link/Convite"}, {"name": "‪+55 91 98506‑3470‬", "date": "2026-06-01", "time": "07:04:16", "tipo": "Link/Convite"}, {"name": "‪+55 91 98166‑9191‬", "date": "2026-06-01", "time": "07:14:09", "tipo": "Link/Convite"}, {"name": "~ Artur Vieira | AcesseHub", "date": "2026-06-01", "time": "07:23:34", "tipo": "Link/Convite"}, {"name": "~ Daniel", "date": "2026-06-01", "time": "07:40:34", "tipo": "Link/Convite"}, {"name": "~ Rick", "date": "2026-06-01", "time": "07:44:12", "tipo": "Link/Convite"}, {"name": "~ Ricardo", "date": "2026-06-01", "time": "08:28:46", "tipo": "Link/Convite"}, {"name": "~ Martinsshopping", "date": "2026-06-01", "time": "08:35:33", "tipo": "Link/Convite"}, {"name": "~ Antonio José", "date": "2026-06-01", "time": "11:08:17", "tipo": "Link/Convite"}, {"name": "~ pierandreiharley", "date": "2026-06-01", "time": "11:26:52", "tipo": "Link/Convite"}, {"name": "‪+55 91 98054‑4433‬", "date": "2026-06-01", "time": "12:00:10", "tipo": "Adicionado por Bruna Amaral"}, {"name": "~ � ", "date": "2026-06-01", "time": "14:09:47", "tipo": "Link/Convite"}, {"name": "‪+55 83 92003‑7087‬", "date": "2026-06-01", "time": "14:27:13", "tipo": "Link/Convite"}, {"name": "~ lohanny", "date": "2026-06-01", "time": "16:00:49", "tipo": "Link/Convite"}, {"name": "‪+55 65 99601‑5254‬", "date": "2026-06-01", "time": "16:12:56", "tipo": "Link/Convite"}, {"name": "‪+55 83 99907‑5370‬", "date": "2026-06-01", "time": "16:36:09", "tipo": "Link/Convite"}, {"name": "~ Vini", "date": "2026-06-01", "time": "17:15:03", "tipo": "Link/Convite"}, {"name": "~ Jamison🤓", "date": "2026-06-01", "time": "18:53:02", "tipo": "Link/Convite"}, {"name": "~ L", "date": "2026-06-01", "time": "21:48:49", "tipo": "Link/Convite"}, {"name": "~ Leonardo Sousa", "date": "2026-06-01", "time": "21:53:07", "tipo": "Link/Convite"}, {"name": "~ 🦅FOCO🐺", "date": "2026-06-01", "time": "23:28:09", "tipo": "Link/Convite"}, {"name": "‪+55 91 98741‑0781‬", "date": "2026-06-01", "time": "23:46:02", "tipo": "Link/Convite"}, {"name": "‪+55 43 99603‑5429‬", "date": "2026-06-02", "time": "00:59:18", "tipo": "Link/Convite"}, {"name": "‪+55 88 99697‑2521‬", "date": "2026-06-02", "time": "08:26:47", "tipo": "Link/Convite"}, {"name": "‪+55 21 96643‑3533‬", "date": "2026-06-02", "time": "08:56:10", "tipo": "Link/Convite"}, {"name": "‪+55 71 99385‑1328‬", "date": "2026-06-02", "time": "09:02:41", "tipo": "Link/Convite"}, {"name": "~ Pode ⚽❤️😍", "date": "2026-06-02", "time": "10:57:33", "tipo": "Link/Convite"}, {"name": "~ Deyd & Cassia", "date": "2026-06-02", "time": "14:03:55", "tipo": "Link/Convite"}, {"name": "~ lorr4n.raws", "date": "2026-06-02", "time": "14:06:46", "tipo": "Link/Convite"}, {"name": "~ .", "date": "2026-06-02", "time": "14:16:56", "tipo": "Link/Convite"}, {"name": "‪+55 51 99585‑3206‬", "date": "2026-06-02", "time": "14:35:07", "tipo": "Link/Convite"}, {"name": "~ M Ravi", "date": "2026-06-02", "time": "17:52:17", "tipo": "Link/Convite"}, {"name": "~ Paulinho FARIAS", "date": "2026-06-02", "time": "18:22:28", "tipo": "Link/Convite"}, {"name": "~ Alan😎", "date": "2026-06-02", "time": "20:58:54", "tipo": "Link/Convite"}, {"name": "~ Emerson Zacarias", "date": "2026-06-02", "time": "21:13:00", "tipo": "Link/Convite"}, {"name": "~ Prof Renata Dalluz", "date": "2026-06-02", "time": "21:35:56", "tipo": "Link/Convite"}, {"name": "Tarcisio Notcell", "date": "2026-06-02", "time": "21:36:41", "tipo": "Link/Convite"}, {"name": "~ Pz", "date": "2026-06-02", "time": "22:11:50", "tipo": "Link/Convite"}, {"name": "~ Leonan", "date": "2026-06-02", "time": "22:37:04", "tipo": "Link/Convite"}, {"name": "~ slipeh211", "date": "2026-06-02", "time": "23:13:31", "tipo": "Link/Convite"}, {"name": "‪+55 91 98543‑1849‬", "date": "2026-06-02", "time": "23:42:37", "tipo": "Link/Convite"}, {"name": "‪+62 857‑1268‑5462‬", "date": "2026-06-03", "time": "00:51:01", "tipo": "Link/Convite"}, {"name": "~ Via Rota - Logística de Transportes", "date": "2026-06-03", "time": "07:35:10", "tipo": "Link/Convite"}, {"name": "‪+55 17 99751‑9253‬", "date": "2026-06-03", "time": "09:14:13", "tipo": "Link/Convite"}, {"name": "‪+55 17 99665‑8870‬", "date": "2026-06-03", "time": "09:18:41", "tipo": "Link/Convite"}, {"name": "‪+55 38 99136‑1981‬", "date": "2026-06-03", "time": "10:51:30", "tipo": "Link/Convite"}, {"name": "~ A", "date": "2026-06-03", "time": "12:57:33", "tipo": "Link/Convite"}, {"name": "‪+55 91 98520‑7080‬", "date": "2026-06-03", "time": "14:01:09", "tipo": "Adicionado por ~ Paulo Vitor Guimarães"}, {"name": "~ Júnior Sales", "date": "2026-06-03", "time": "14:40:41", "tipo": "Link/Convite"}, {"name": "Disparo Vivo", "date": "2026-06-03", "time": "16:11:34", "tipo": "Link/Convite"}, {"name": "Gabriel Nubank", "date": "2026-06-03", "time": "16:19:44", "tipo": "Link/Convite"}, {"name": "~ J. Dourado", "date": "2026-06-04", "time": "14:01:42", "tipo": "Link/Convite"}, {"name": "~ Rodrigo", "date": "2026-06-04", "time": "14:02:59", "tipo": "Link/Convite"}, {"name": "Ryan", "date": "2026-06-04", "time": "14:03:05", "tipo": "Link/Convite"}, {"name": "Pedro Alexandre", "date": "2026-06-04", "time": "14:04:07", "tipo": "Link/Convite"}, {"name": "~ Rodrigo Silva 🤨", "date": "2026-06-04", "time": "14:11:21", "tipo": "Link/Convite"}, {"name": "~ Ângelo Souza", "date": "2026-06-04", "time": "14:44:53", "tipo": "Link/Convite"}, {"name": "~ faartigospersonalizados", "date": "2026-06-04", "time": "16:02:24", "tipo": "Link/Convite"}, {"name": "‪+55 91 98364‑9094‬", "date": "2026-06-06", "time": "15:49:30", "tipo": "Link/Convite"}, {"name": "‪+55 93 98403‑1270‬", "date": "2026-06-06", "time": "17:57:43", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "~ John Evangelista", "date": "2026-06-07", "time": "09:58:58", "tipo": "Link/Convite"}, {"name": "‪+55 99 99234‑9913‬", "date": "2026-06-07", "time": "11:33:00", "tipo": "Link/Convite"}, {"name": "‪+55 91 98234‑2227‬", "date": "2026-06-07", "time": "13:33:04", "tipo": "Link/Convite"}, {"name": "‪+55 91 98238‑1669‬", "date": "2026-06-07", "time": "13:35:35", "tipo": "Link/Convite"}, {"name": "~ Giselle Pinheiro", "date": "2026-06-07", "time": "13:36:08", "tipo": "Link/Convite"}, {"name": "‪+55 91 98500‑3182‬", "date": "2026-06-07", "time": "13:37:04", "tipo": "Adicionado por ‪+55 91 98238‑1669‬"}, {"name": "‪+55 91 98146‑9162‬", "date": "2026-06-07", "time": "13:38:41", "tipo": "Link/Convite"}, {"name": "‪+55 82 99929‑1411‬", "date": "2026-06-07", "time": "13:41:28", "tipo": "Link/Convite"}, {"name": "~ Bigjlt@gmail.com", "date": "2026-06-07", "time": "13:41:36", "tipo": "Link/Convite"}, {"name": "‪+55 91 98170‑3392‬", "date": "2026-06-07", "time": "13:41:49", "tipo": "Link/Convite"}, {"name": "‪+55 91 98028‑3467‬", "date": "2026-06-07", "time": "13:46:05", "tipo": "Link/Convite"}, {"name": "‪+55 91 98919‑4658‬", "date": "2026-06-07", "time": "14:00:41", "tipo": "Link/Convite"}, {"name": "‪+55 91 98216‑9998‬", "date": "2026-06-07", "time": "14:08:47", "tipo": "Link/Convite"}, {"name": "‪+55 91 98160‑7772‬", "date": "2026-06-07", "time": "14:16:05", "tipo": "Link/Convite"}, {"name": "‪+55 85 99941‑5212‬", "date": "2026-06-07", "time": "14:16:37", "tipo": "Link/Convite"}, {"name": "Rogerio Salbé", "date": "2026-06-07", "time": "14:18:12", "tipo": "Link/Convite"}, {"name": "‪+55 91 98228‑6525‬", "date": "2026-06-07", "time": "14:24:30", "tipo": "Link/Convite"}, {"name": "‪+55 91 98046‑3137‬", "date": "2026-06-07", "time": "14:37:21", "tipo": "Link/Convite"}, {"name": "‪+55 91 98018‑4476‬", "date": "2026-06-07", "time": "14:49:24", "tipo": "Link/Convite"}, {"name": "~ Fran🦊", "date": "2026-06-07", "time": "15:10:41", "tipo": "Link/Convite"}, {"name": "‪+55 91 98469‑4995‬", "date": "2026-06-07", "time": "15:21:37", "tipo": "Link/Convite"}, {"name": "~ Elanny", "date": "2026-06-07", "time": "15:28:50", "tipo": "Link/Convite"}, {"name": "‪+55 82 99941‑3720‬", "date": "2026-06-07", "time": "16:40:06", "tipo": "Link/Convite"}, {"name": "‪+55 91 98047‑4488‬", "date": "2026-06-07", "time": "17:25:07", "tipo": "Link/Convite"}, {"name": "‪+55 91 98821‑2385‬", "date": "2026-06-07", "time": "17:36:13", "tipo": "Link/Convite"}, {"name": "‪+55 91 98358‑8054‬", "date": "2026-06-07", "time": "17:55:42", "tipo": "Link/Convite"}, {"name": "Rodrigo Primo", "date": "2026-06-07", "time": "19:22:47", "tipo": "Link/Convite"}, {"name": "~ Alessandro Danillo", "date": "2026-06-07", "time": "19:58:22", "tipo": "Link/Convite"}, {"name": "‪+55 11 99296‑6166‬", "date": "2026-06-07", "time": "21:43:10", "tipo": "Link/Convite"}, {"name": "‪+55 91 98444‑7876‬", "date": "2026-06-07", "time": "23:42:14", "tipo": "Link/Convite"}, {"name": "‪+55 91 99196‑3977‬", "date": "2026-06-08", "time": "04:50:59", "tipo": "Link/Convite"}, {"name": "‪+55 91 99101‑3968‬", "date": "2026-06-08", "time": "07:12:18", "tipo": "Link/Convite"}, {"name": "Eloy Breves", "date": "2026-06-08", "time": "08:57:40", "tipo": "Link/Convite"}, {"name": "~ Nattanzinho_tur", "date": "2026-06-08", "time": "10:26:54", "tipo": "Link/Convite"}, {"name": "‪+55 14 99631‑3749‬", "date": "2026-06-08", "time": "12:43:30", "tipo": "Link/Convite"}, {"name": "‪+55 91 98198‑9218‬", "date": "2026-06-08", "time": "16:20:22", "tipo": "Link/Convite"}, {"name": "~ Henrique Junior", "date": "2026-06-08", "time": "18:29:01", "tipo": "Link/Convite"}, {"name": "‪+62 831‑1584‑4053‬", "date": "2026-06-08", "time": "20:23:54", "tipo": "Link/Convite"}, {"name": "‪+55 91 98418‑0852‬", "date": "2026-06-09", "time": "15:10:35", "tipo": "Link/Convite"}, {"name": "~ Leonardo Coelho🐰", "date": "2026-06-09", "time": "18:00:04", "tipo": "Link/Convite"}, {"name": "~ Smarttech Eletroinfor", "date": "2026-06-09", "time": "18:09:03", "tipo": "Link/Convite"}, {"name": "‪+55 91 98542‑9662‬", "date": "2026-06-09", "time": "18:14:06", "tipo": "Link/Convite"}, {"name": "~ Rn⚡️", "date": "2026-06-09", "time": "18:15:11", "tipo": "Link/Convite"}, {"name": "‪+55 91 98382‑4616‬", "date": "2026-06-09", "time": "19:50:32", "tipo": "Link/Convite"}, {"name": "‪+55 62 99455‑8583‬", "date": "2026-06-09", "time": "20:29:41", "tipo": "Link/Convite"}, {"name": "‪+55 51 99720‑8379‬", "date": "2026-06-09", "time": "20:42:59", "tipo": "Link/Convite"}, {"name": "~ Junior Cadete", "date": "2026-06-09", "time": "21:34:22", "tipo": "Link/Convite"}, {"name": "Tarcisio LINK", "date": "2026-06-13", "time": "17:02:06", "tipo": "Link/Convite"}, {"name": "~ soluções Informática 🖥️💻🙏", "date": "2026-06-13", "time": "17:29:29", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "~ Matheus Vieira", "date": "2026-06-13", "time": "17:50:56", "tipo": "Link/Convite"}, {"name": "wemersonconcricao LINK", "date": "2026-06-13", "time": "18:55:17", "tipo": "Adicionado por admin"}, {"name": "Vanderleia.aquino LINK", "date": "2026-06-13", "time": "21:59:34", "tipo": "Link/Convite"}, {"name": "‪+55 77 98166‑5432‬", "date": "2026-06-14", "time": "11:49:56", "tipo": "Link/Convite"}, {"name": "Andreianogarolli LINK", "date": "2026-06-14", "time": "16:18:58", "tipo": "Adicionado por admin"}, {"name": "Lucas Gurupa", "date": "2026-06-14", "time": "22:48:39", "tipo": "Link/Convite"}, {"name": "‪+55 21 98107‑1416‬", "date": "2026-06-15", "time": "11:25:16", "tipo": "Link/Convite"}, {"name": "‪+55 77 98166‑5432‬", "date": "2026-06-15", "time": "13:52:26", "tipo": "Link/Convite"}, {"name": "Eivilson Gomes LINK", "date": "2026-06-15", "time": "14:33:00", "tipo": "Adicionado por Gabriel Salbé Salbé TIM"}, {"name": "‪+55 18 99107‑3968‬", "date": "2026-06-15", "time": "18:27:53", "tipo": "Link/Convite"}, {"name": "‪+55 71 99144‑4740‬", "date": "2026-06-16", "time": "13:04:48", "tipo": "Link/Convite"}, {"name": "‪+55 19 99182‑5104‬", "date": "2026-06-16", "time": "14:53:52", "tipo": "Link/Convite"}, {"name": "‪+55 18 98107‑6671‬", "date": "2026-06-16", "time": "15:00:40", "tipo": "Link/Convite"}, {"name": "~ Matheus Corrêa", "date": "2026-06-17", "time": "11:05:42", "tipo": "Link/Convite"}, {"name": "~ BRAIAN PRETO", "date": "2026-06-17", "time": "11:08:28", "tipo": "Link/Convite"}, {"name": "~ Pedro Thiago M.", "date": "2026-06-17", "time": "11:10:06", "tipo": "Link/Convite"}, {"name": "~ gabriel barbosa", "date": "2026-06-17", "time": "11:11:02", "tipo": "Link/Convite"}, {"name": "Maikii Pro", "date": "2026-06-17", "time": "11:28:42", "tipo": "Link/Convite"}, {"name": "~ ABRAAO", "date": "2026-06-17", "time": "11:58:57", "tipo": "Link/Convite"}, {"name": "~ Ana Sathler", "date": "2026-06-17", "time": "14:12:53", "tipo": "Link/Convite"}, {"name": "~ Eli Aguero", "date": "2026-06-17", "time": "15:12:58", "tipo": "Link/Convite"}, {"name": "‪+55 11 98174‑2811‬", "date": "2026-06-17", "time": "15:37:51", "tipo": "Link/Convite"}, {"name": "‪+55 71 99388‑3641‬", "date": "2026-06-17", "time": "21:05:40", "tipo": "Link/Convite"}, {"name": "~ •               🍃", "date": "2026-06-17", "time": "22:50:07", "tipo": "Link/Convite"}, {"name": "~ rafaeltrb pa", "date": "2026-06-18", "time": "10:06:40", "tipo": "Link/Convite"}, {"name": "~ Cleiton Martins", "date": "2026-06-18", "time": "14:02:12", "tipo": "Link/Convite"}, {"name": "~ caio224", "date": "2026-06-18", "time": "14:53:27", "tipo": "Link/Convite"}, {"name": "~ AnnyRamos💋", "date": "2026-06-18", "time": "16:49:44", "tipo": "Link/Convite"}, {"name": "‪+55 15 99756‑9880‬", "date": "2026-06-18", "time": "21:05:08", "tipo": "Link/Convite"}, {"name": "~ Eliza Boni", "date": "2026-06-18", "time": "22:15:56", "tipo": "Link/Convite"}, {"name": "~ ", "date": "2026-06-19", "time": "12:07:27", "tipo": "Adicionado por ~ John Evangelista"}, {"name": "~ Arthur Borges", "date": "2026-06-19", "time": "16:07:46", "tipo": "Link/Convite"}, {"name": "‪+55 91 98820‑0005‬", "date": "2026-06-19", "time": "16:19:20", "tipo": "Link/Convite"}, {"name": "‪+55 91 98139‑1406‬", "date": "2026-06-19", "time": "16:53:59", "tipo": "Link/Convite"}, {"name": "‪+55 91 98852‑8696‬", "date": "2026-06-19", "time": "17:17:16", "tipo": "Link/Convite"}, {"name": "~ .", "date": "2026-06-20", "time": "11:42:48", "tipo": "Link/Convite"}, {"name": "~ Thiago Ribeiro", "date": "2026-06-20", "time": "14:35:44", "tipo": "Link/Convite"}, {"name": "‪+55 91 99142‑1117‬", "date": "2026-06-21", "time": "16:05:10", "tipo": "Link/Convite"}, {"name": "~ Nanda📸", "date": "2026-06-21", "time": "16:49:09", "tipo": "Link/Convite"}, {"name": "‪+55 91 98161‑4086‬", "date": "2026-06-21", "time": "22:23:06", "tipo": "Link/Convite"}, {"name": "‪+55 91 98166‑7840‬", "date": "2026-06-21", "time": "22:23:13", "tipo": "Link/Convite"}, {"name": "‪+55 91 98051‑5959‬", "date": "2026-06-21", "time": "22:24:24", "tipo": "Link/Convite"}, {"name": "‪+55 91 98134‑9678‬", "date": "2026-06-21", "time": "22:24:43", "tipo": "Link/Convite"}, {"name": "‪+55 91 98871‑9071‬", "date": "2026-06-21", "time": "22:31:26", "tipo": "Link/Convite"}, {"name": "‪+55 91 98277‑0047‬", "date": "2026-06-21", "time": "22:33:41", "tipo": "Link/Convite"}, {"name": "‪+55 91 98524‑8660‬", "date": "2026-06-21", "time": "22:35:37", "tipo": "Link/Convite"}, {"name": "paolla rodrigues Banpara", "date": "2026-06-21", "time": "23:21:13", "tipo": "Link/Convite"}, {"name": "‪+55 91 98976‑5958‬", "date": "2026-06-21", "time": "23:23:16", "tipo": "Link/Convite"}, {"name": "‪+55 91 99832‑5717‬", "date": "2026-06-22", "time": "06:44:26", "tipo": "Link/Convite"}, {"name": "‪+55 91 98535‑8503‬", "date": "2026-06-22", "time": "09:30:24", "tipo": "Link/Convite"}, {"name": "~ Alessandro", "date": "2026-06-22", "time": "10:06:36", "tipo": "Link/Convite"}, {"name": "~ Diogo Lessa", "date": "2026-06-22", "time": "14:08:50", "tipo": "Link/Convite"}, {"name": "‪+55 91 98606‑9451‬", "date": "2026-06-22", "time": "15:15:13", "tipo": "Link/Convite"}, {"name": "~ David", "date": "2026-06-22", "time": "15:33:17", "tipo": "Link/Convite"}, {"name": "‪+55 24 99330‑0324‬", "date": "2026-06-22", "time": "15:47:25", "tipo": "Link/Convite"}, {"name": "~ Marcelo", "date": "2026-06-24", "time": "15:57:37", "tipo": "Link/Convite"}, {"name": "‪+55 91 98256‑3639‬", "date": "2026-06-24", "time": "16:50:53", "tipo": "Link/Convite"}, {"name": "~ Anjo Negro", "date": "2026-06-24", "time": "18:37:10", "tipo": "Link/Convite"}, {"name": "Talita dos Santos Salbé", "date": "2026-06-25", "time": "00:30:07", "tipo": "Link/Convite"}, {"name": "Leonardo | @taprodutora", "date": "2026-06-25", "time": "08:58:37", "tipo": "Link/Convite"}, {"name": "‪+55 91 99141‑9102‬", "date": "2026-06-25", "time": "22:34:23", "tipo": "Link/Convite"}, {"name": "~ New Stores - Wendel Jr", "date": "2026-06-26", "time": "17:48:07", "tipo": "Link/Convite"}, {"name": "~ LuisFerr", "date": "2026-06-26", "time": "23:24:11", "tipo": "Link/Convite"}, {"name": "‪+55 11 91539‑0403‬", "date": "2026-06-27", "time": "14:48:23", "tipo": "Link/Convite"}, {"name": "‪+55 91 98455‑4884‬", "date": "2026-06-27", "time": "17:08:51", "tipo": "Link/Convite"}, {"name": "‪+55 91 98592‑6626‬", "date": "2026-06-27", "time": "17:26:30", "tipo": "Link/Convite"}, {"name": "‪+55 91 99180‑9988‬", "date": "2026-06-27", "time": "17:31:35", "tipo": "Link/Convite"}, {"name": "‪+55 91 98065‑6925‬", "date": "2026-06-27", "time": "17:32:40", "tipo": "Link/Convite"}, {"name": "‪+55 91 98499‑0957‬", "date": "2026-06-27", "time": "17:49:00", "tipo": "Link/Convite"}, {"name": "‪+55 91 98954‑5220‬", "date": "2026-06-27", "time": "18:06:08", "tipo": "Link/Convite"}, {"name": "~ K@r0l", "date": "2026-06-27", "time": "18:43:05", "tipo": "Link/Convite"}, {"name": "‪+55 91 98187‑4424‬", "date": "2026-06-27", "time": "18:48:27", "tipo": "Link/Convite"}, {"name": "‪+55 98 98507‑0188‬", "date": "2026-06-27", "time": "18:56:44", "tipo": "Link/Convite"}, {"name": "‪+55 91 98709‑3963‬", "date": "2026-06-27", "time": "19:54:34", "tipo": "Link/Convite"}, {"name": "‪+55 91 99331‑2344‬", "date": "2026-06-27", "time": "22:30:57", "tipo": "Link/Convite"}];
+const RETORNOS=[{"name": "~ 🥰🤪", "saiu_em": "2026-05-27", "retornou_em": "2026-05-31"}, {"name": "~ Diogo Lessa", "saiu_em": "2026-05-14", "retornou_em": "2026-06-22"}, {"name": "P. Victor BANPARA", "saiu_em": "2026-05-12", "retornou_em": "2026-05-20"}, {"name": "P. Victor BANPARA", "saiu_em": "2026-05-12", "retornou_em": "2026-05-20"}, {"name": "Eloy Breves", "saiu_em": "2026-05-21", "retornou_em": "2026-06-08"}, {"name": "Luciley Salbé", "saiu_em": "2026-05-10", "retornou_em": "2026-05-13"}, {"name": "‪+55 91 98820‑0005‬", "saiu_em": "2026-05-22", "retornou_em": "2026-06-19"}, {"name": "~ Márcio", "saiu_em": "2026-05-15", "retornou_em": "2026-05-17"}, {"name": "~ Eliza Boni", "saiu_em": "2026-05-31", "retornou_em": "2026-06-18"}, {"name": "Sheila Barbosa", "saiu_em": "2026-05-09", "retornou_em": "2026-05-10"}, {"name": "~ .", "saiu_em": "2026-05-27", "retornou_em": "2026-06-02"}, {"name": "‪+55 77 98166‑5432‬", "saiu_em": "2026-06-14", "retornou_em": "2026-06-15"}, {"name": "Interessado Antena", "saiu_em": "2026-05-15", "retornou_em": "2026-05-19"}, {"name": "~ Daniel", "saiu_em": "2026-05-18", "retornou_em": "2026-06-01"}];
+
+let filteredAtivos=[...ATIVOS];
+let filteredSaidas=[...SAIDAS];
+let filteredEntradas=[...ENTRADAS];
+
+// ===== UTILS =====
+const avBg=['#1a4731','#3d2e00','#1a2d4a','#2d1a2d','#3d2000'];
+const avTx=['#25d366','#d29300','#388bfd','#bc8cff','#e3b341'];
+function ini(n){
+  const w=n.trim().split(' ').filter(x=>x.length>0&&!/^[+\d~]/.test(x));
+  if(w.length>=2)return(w[0][0]+(w[1][0]||'')).toUpperCase();
+  if(w.length===1&&w[0].length>0)return w[0].substring(0,2).toUpperCase();
+  return '?';
+}
+function avH(name,i){
+  const ci=i%5;
+  const isNum=name.startsWith('+')||name.startsWith('Contact')||name.startsWith('~');
+  return '<div class="av" style="background:'+avBg[ci]+';color:'+avTx[ci]+'">'+(isNum?'#':ini(name))+'</div>';
+}
+function fd(d){if(!d)return'';const p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function addD(s,n){const d=new Date(s);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function diffDays(a,b){return Math.round((new Date(b)-new Date(a))/(1000*60*60*24));}
+
+// ===== TABS =====
+function showTab(name, deskBtn, mobBtn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(deskBtn){
+    document.querySelectorAll('.desk-tabs .tab').forEach(b=>b.classList.remove('active'));
+    deskBtn.classList.add('active');
+  }
+  if(mobBtn){
+    document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+    mobBtn.classList.add('active');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== RENDER ATIVOS =====
+function renderAtivos(list){
+  document.getElementById('tbl-ativos').innerHTML=list.map((m,i)=>{
+    const isC=m.name.startsWith('Contact');
+    return '<tr><td>'+avH(m.name,i)+'</td><td class="nc" title="'+m.name+'">'+m.name+'</td><td style="color:#8b949e">'+m.phone+'</td><td><span class="badge '+(isC?'b-blue':'b-green')+'">'+(isC?'Sem nome':'Nomeado')+'</span></td></tr>';
+  }).join('');
+  document.getElementById('cnt-ativos').textContent='Exibindo '+list.length+' de '+ATIVOS.length+' membros';
+}
+function filterAtivos(){
+  const q=document.getElementById('sa').value.toLowerCase();
+  const t=document.getElementById('fa').value;
+  filteredAtivos=ATIVOS.filter(m=>{
+    const mQ=!q||(m.name.toLowerCase().includes(q)||m.phone.includes(q));
+    const mT=!t||(t==='named'&&!m.name.startsWith('Contact'))||(t==='contact'&&m.name.startsWith('Contact'));
+    return mQ&&mT;
+  });
+  renderAtivos(filteredAtivos);
+}
+
+// ===== RENDER ENTRADAS =====
+function renderEntradas(list){
+  document.getElementById('tbl-entradas').innerHTML=list.map((e,i)=>{
+    const tB=e.tipo&&(e.tipo.includes('Link')||e.tipo.includes('Convite'))?'b-blue':e.tipo&&e.tipo.includes('admin')?'b-green':'b-orange';
+    return '<tr><td>'+avH(e.name,i)+'</td><td class="nc" title="'+e.name+'">'+e.name+'</td><td><span class="badge b-teal">'+fd(e.date)+'</span></td><td style="color:#484f58">'+e.time+'</td><td><span class="badge '+tB+'">'+(e.tipo||'—')+'</span></td></tr>';
+  }).join('');
+  document.getElementById('cnt-entradas').textContent='Exibindo '+list.length+' de '+ENTRADAS.length+' entradas';
+}
+function filterEntradas(){
+  const q=document.getElementById('se').value.toLowerCase();
+  const mes=document.getElementById('fe-mes').value;
+  const tipo=document.getElementById('fe-tipo').value;
+  filteredEntradas=ENTRADAS.filter(e=>{
+    const mQ=!q||(e.name.toLowerCase().includes(q)||e.date.includes(q));
+    const mM=!mes||e.date.startsWith(mes);
+    const mT=!tipo||((e.tipo||'').includes(tipo));
+    return mQ&&mM&&mT;
+  });
+  renderEntradas(filteredEntradas);
+}
+
+// ===== RENDER SAÍDAS =====
+function renderSaidas(list){
+  document.getElementById('tbl-saidas').innerHTML=list.map((s,i)=>{
+    return '<tr><td>'+avH(s.name,i)+'</td><td class="nc" title="'+s.name+'">'+s.name+'</td><td style="color:#8b949e">'+(s.phone||'—')+'</td><td><span class="badge b-red">'+fd(s.date)+'</span></td><td style="color:#484f58">'+(s.time||'—')+'</td></tr>';
+  }).join('');
+  document.getElementById('cnt-saidas').textContent='Exibindo '+list.length+' de '+SAIDAS.length+' saídas';
+}
+function filterSaidas(){
+  const q=document.getElementById('ss').value.toLowerCase();
+  const mes=document.getElementById('fs-mes').value;
+  const sem=document.getElementById('fs-sem').value;
+  filteredSaidas=SAIDAS.filter(s=>{
+    const mQ=!q||(s.name.toLowerCase().includes(q)||(s.phone||'').includes(q)||s.date.includes(q));
+    const mM=!mes||s.date.startsWith(mes);
+    const mS=!sem||(s.date>=sem&&s.date<addD(sem,7));
+    return mQ&&mM&&mS;
+  });
+  renderSaidas(filteredSaidas);
+}
+
+// ===== RENDER RETORNOS =====
+function renderRetornos(){
+  document.getElementById('tbl-retornos').innerHTML=RETORNOS.map((r,i)=>{
+    const dias=diffDays(r.saiu_em,r.retornou_em);
+    return '<tr><td>'+avH(r.name,i)+'</td><td class="nc">'+r.name+'</td><td><span class="badge b-red">'+fd(r.saiu_em)+'</span></td><td><span class="badge b-green">'+fd(r.retornou_em)+'</span></td><td><span class="badge b-purple">'+dias+'d</span></td></tr>';
+  }).join('');
+}
+
+// ===== BUSCA GLOBAL =====
+function buscaGlobal(q){
+  if(!q||q.length<2){
+    document.getElementById('tbl-global').innerHTML='';
+    document.getElementById('cnt-global').textContent='Digite ao menos 2 caracteres';
+    return;
+  }
+  const ql=q.toLowerCase();
+  const ra=ATIVOS.filter(m=>m.name.toLowerCase().includes(ql)||m.phone.includes(ql)).map(m=>({name:m.name,phone:m.phone,status:'ativo',date:''}));
+  const rs=SAIDAS.filter(s=>s.name.toLowerCase().includes(ql)||(s.phone||'').includes(ql)).map(s=>({name:s.name,phone:s.phone||'',status:'saiu',date:s.date}));
+  const re=ENTRADAS.filter(e=>e.name.toLowerCase().includes(ql)).map(e=>({name:e.name,phone:'',status:'entrou',date:e.date}));
+  const all=[...ra,...rs,...re];
+  document.getElementById('cnt-global').textContent=all.length+' resultado(s)';
+  document.getElementById('tbl-global').innerHTML=all.map((r,i)=>{
+    const b=r.status==='ativo'?'<span class="badge b-green">✅ Ativo</span>':r.status==='saiu'?'<span class="badge b-red">🚪 Saiu</span>':'<span class="badge b-teal">📥 Entrou</span>';
+    return '<tr><td>'+avH(r.name,i)+'</td><td class="nc" title="'+r.name+'">'+r.name+'</td><td style="color:#8b949e">'+(r.phone||'—')+'</td><td>'+b+'</td><td style="color:#484f58">'+(r.date?fd(r.date):'—')+'</td></tr>';
+  }).join('');
+}
+
+// ===== EXPORT CSV =====
+function exportCSV(data,filename){
+  if(!data||!data.length){alert('Sem dados');return;}
+  const keys=Object.keys(data[0]);
+  const rows=[keys.join(','),...data.map(r=>keys.map(k=>'"'+((r[k]||'').toString().replace(/"/g,'""'))+'"').join(','))];
+  const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+}
+
+// ===== CHARTS =====
+function buildCharts(){
+  function barChart(elId,data,colorFn){
+    const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+    const max=sorted[0]?sorted[0][1]:1;
+    document.getElementById(elId).innerHTML=sorted.slice(0,12).map(function(e){
+      const d=e[0],c=e[1];
+      return '<div class="bar-row"><div class="bar-lbl">'+fd(d)+'</div><div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round(c/max*100)+'%;background:'+colorFn(c)+'">'+c+'</div></div></div>';
+    }).join('');
+    return sorted;
+  }
+  const byIn={};
+  ENTRADAS.forEach(e=>{byIn[e.date]=(byIn[e.date]||0)+1});
+  barChart('bar-in',byIn,c=>c>=30?'#25d366':c>=15?'#388bfd':'#1a6b3a');
+
+  const byOut={};
+  SAIDAS.forEach(s=>{byOut[s.date]=(byOut[s.date]||0)+1});
+  const sortedOut=barChart('bar-out',byOut,c=>c>=20?'#c93a39':c>=10?'#f85149':c>=5?'#d29300':'#388bfd');
+
+  // Ranking completo
+  const allSorted=Object.entries(byOut).sort((a,b)=>b[1]-a[1]);
+  const maxO=allSorted[0]?allSorted[0][1]:1;
+  document.getElementById('rank-tbl').innerHTML=allSorted.map(function(e,i){
+    const d=e[0],c=e[1];
+    const cl=c>=20?'b-red':c>=10?'b-orange':'b-blue';
+    return '<tr><td style="color:#484f58;font-weight:700">'+(i+1)+'</td><td>'+fd(d)+'</td><td><span class="badge '+cl+'">'+c+'</span></td><td><div style="background:#0d1117;border-radius:3px;height:10px;overflow:hidden"><div style="width:'+Math.round(c/maxO*100)+'%;height:100%;background:'+(c>=20?'#c93a39':c>=10?'#f85149':'#388bfd')+'"></div></div></td></tr>';
+  }).join('');
+
+  // Semanas
+  function getWeek(d){const dt=new Date(d);const day=dt.getDay();const diff=dt.getDate()-(day===0?6:day-1);const mon=new Date(dt);mon.setDate(diff);return mon.toISOString().slice(0,10);}
+  const weeks={};
+  ENTRADAS.forEach(e=>{const w=getWeek(e.date);if(!weeks[w])weeks[w]={in:0,out:0};weeks[w].in++;});
+  SAIDAS.forEach(s=>{const w=getWeek(s.date);if(!weeks[w])weeks[w]={in:0,out:0};weeks[w].out++;});
+  const sortedW=Object.entries(weeks).sort((a,b)=>a[0].localeCompare(b[0]));
+  const maxW=Math.max(...sortedW.map(e=>Math.max(e[1].in,e[1].out)),1);
+  document.getElementById('bar-week').innerHTML=sortedW.map(function(e){
+    const w=e[0],v=e[1];
+    return '<div class="bar-row"><div class="bar-lbl">'+fd(w)+'</div><div style="flex:1;display:flex;flex-direction:column;gap:2px">'+
+      '<div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round(v.in/maxW*100)+'%;background:#25d366">📥'+v.in+'</div></div>'+
+      '<div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round(v.out/maxW*100)+'%;background:#f85149">🚪'+v.out+'</div></div>'+
+      '</div></div>';
+  }).join('');
+}
+
+// ===== PWA: Service Worker =====
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').then(()=>console.log('SW registrado'));
+}
+
+// ===== PWA: Install prompt =====
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  document.getElementById('install-banner').style.display='block';
+});
+function installPWA(){
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(()=>{
+    deferredPrompt=null;
+    document.getElementById('install-banner').style.display='none';
+  });
+}
+window.addEventListener('appinstalled',()=>{
+  document.getElementById('install-banner').style.display='none';
+});
+
+// ===== INIT APP =====
+function initApp(){
+  renderAtivos(ATIVOS);
+  renderEntradas(ENTRADAS);
+  renderSaidas(SAIDAS);
+  renderRetornos();
+  buildCharts();
+}
+</script>
+</body>
+</html>
