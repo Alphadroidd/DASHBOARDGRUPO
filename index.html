@@ -141,7 +141,7 @@ tr:hover td{background:#21262d40}
   <div style="flex:1">
     <h1>Compra Certa, Fatura Incerta</h1>
     <div class="sub">Atualizado em 07/07/2026 · Grupo criado em 09/05/2026</div>
-    <div class="sub" id="dash-check-info" style="margin-top:2px">🔄 Última verificação: 07/07 13:21 · checagem a cada 15 min</div><!--/dash-check-info-->
+    <div class="sub" id="dash-check-info" style="margin-top:2px">🔄 Última verificação: 07/07 13:23 · checagem a cada 15 min</div><!--/dash-check-info-->
   </div>
   <button class="logout-btn" onclick="doLogout()">Sair</button>
 </div>
@@ -175,15 +175,23 @@ tr:hover td{background:#21262d40}
   <div class="section" id="dash-recent-changes">
     <h2>🕓 Últimas alterações</h2>
     <div id="dash-recent-list" style="font-size:12px;line-height:1.9;color:#8b949e">
-      <div>📥 <b>~ +78121210478717</b> entrou em 07/07 13:21</div>
-<div>🚪 <b>~ +171163204460780</b> saiu em 07/07 13:06</div>
-<div>📥 <b>+55 91 98033‑5475</b> entrou em 07/07 11:34</div>
-<div>📥 <b>+55 91 98514‑2552</b> entrou em 07/07 10:53</div>
-<div>📥 <b>+55 91 98192‑1145</b> entrou em 07/07 08:03</div>
-<div>🚪 <b>~ 091_felp</b> saiu em 07/07 00:40</div>
-<div>📥 <b>~ 091_felp</b> entrou em 07/07 00:39</div>
-<div>🚪 <b>LHSS</b> saiu em 07/07 00:02</div>
+      <div>📥 <b>~ +78121210478717</b> entrou em 07/07 13:21 · grupo foi para 287</div>
+<div>🚪 <b>~ +171163204460780</b> saiu em 07/07 13:06 · grupo foi para 286</div>
+<div>📥 <b>+55 91 98033‑5475</b> entrou em 07/07 11:34 · grupo foi para 287</div>
+<div>📥 <b>+55 91 98514‑2552</b> entrou em 07/07 10:53 · grupo foi para 286</div>
+<div>📥 <b>+55 91 98192‑1145</b> entrou em 07/07 08:03 · grupo foi para 285</div>
+<div>🚪 <b>~ 091_felp</b> saiu em 07/07 00:40 · grupo foi para 284</div>
+<div>📥 <b>~ 091_felp</b> entrou em 07/07 00:39 · grupo foi para 285</div>
+<div>🚪 <b>LHSS</b> saiu em 07/07 00:02 · grupo foi para 284</div>
     </div><!--/dash-recent-list-->
+  </div>
+  <div class="section" id="dash-member-timeline">
+    <h2>📈 Membros ao longo do tempo</h2>
+    <div id="member-timeline-chart"></div>
+  </div>
+  <div class="section" id="dash-hourly">
+    <h2>🕐 Entradas/Saídas por hora (últimas 24h)</h2>
+    <div class="bar-chart" id="bar-hourly"></div>
   </div>
   <div class="section">
     <h2>📥 Top dias de Entrada <span class="new-badge">NOVO até 07/07</span></h2>
@@ -220,7 +228,7 @@ tr:hover td{background:#21262d40}
 
 <!-- ENTRADAS -->
 <div id="tab-entradas" class="panel">
-  <div class="section"><h2>📥 Histórico de Entradas <span class="new-badge">+1 novas</span></h2>
+  <div class="section"><h2>📥 Histórico de Entradas <span class="new-badge">+0 novas</span></h2>
     <div class="search-row">
       <input class="sb" placeholder="🔍 Nome ou data..." oninput="filterEntradas()" id="se"/>
       <select class="sf" onchange="filterEntradas()" id="fe-mes">
@@ -468,6 +476,63 @@ function exportCSV(data,filename){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
 }
 
+function buildHourlyChart(){
+  const now=new Date();
+  const buckets=[];
+  for(let i=23;i>=0;i--){
+    const d=new Date(now.getTime()-i*3600*1000);
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'T'+String(d.getHours()).padStart(2,'0');
+    buckets.push({key:key,label:String(d.getHours()).padStart(2,'0')+'h',in:0,out:0});
+  }
+  const idx={};buckets.forEach(function(b,i){idx[b.key]=i;});
+  function toKey(dateStr,timeStr){return dateStr+'T'+((timeStr||'00').slice(0,2));}
+  ENTRADAS.forEach(function(e){const k=toKey(e.date,e.time);if(idx[k]!==undefined)buckets[idx[k]].in++;});
+  SAIDAS.forEach(function(s){const k=toKey(s.date,s.time);if(idx[k]!==undefined)buckets[idx[k]].out++;});
+  const max=Math.max.apply(null,buckets.map(function(b){return Math.max(b.in,b.out);}).concat([1]));
+  const el=document.getElementById('bar-hourly');
+  if(!el)return;
+  el.innerHTML=buckets.map(function(b){
+    return '<div class="bar-row"><div class="bar-lbl">'+b.label+'</div><div style="flex:1;display:flex;flex-direction:column;gap:2px">'+
+      '<div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round(b.in/max*100)+'%;background:#25d366">'+(b.in||'')+'</div></div>'+
+      '<div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round(b.out/max*100)+'%;background:#f85149">'+(b.out||'')+'</div></div>'+
+      '</div></div>';
+  }).join('');
+}
+
+function buildMemberTimeline(){
+  const el=document.getElementById('member-timeline-chart');
+  if(!el)return;
+  const events=[];
+  ENTRADAS.forEach(function(e){events.push({dt:e.date+'T'+(e.time||'00:00:00'),delta:1});});
+  SAIDAS.forEach(function(s){events.push({dt:s.date+'T'+(s.time||'00:00:00'),delta:-1});});
+  if(events.length===0){el.innerHTML='<div style="color:#8b949e;font-size:12px">Sem dados suficientes.</div>';return;}
+  events.sort(function(a,b){return a.dt<b.dt?-1:a.dt>b.dt?1:0;});
+  const totalDelta=events.reduce(function(s,e){return s+e.delta;},0);
+  let running=ATIVOS.length-totalDelta;
+  const byDay={};
+  events.forEach(function(e){running+=e.delta;byDay[e.dt.slice(0,10)]=running;});
+  const days=Object.keys(byDay).sort();
+  const points=days.map(function(d){return {date:d,total:byDay[d]};});
+  const w=Math.max(600,points.length*8),h=140,pad=24;
+  const vals=points.map(function(p){return p.total;});
+  const minV=Math.min.apply(null,vals),maxV=Math.max.apply(null,vals);
+  const range=Math.max(1,maxV-minV);
+  const stepX=(w-2*pad)/Math.max(1,points.length-1);
+  const coords=points.map(function(p,i){
+    const x=pad+i*stepX;
+    const y=h-pad-((p.total-minV)/range)*(h-2*pad);
+    return x.toFixed(1)+','+y.toFixed(1);
+  });
+  const last=points[points.length-1];
+  const lastXY=coords[coords.length-1].split(',');
+  const svg='<svg viewBox="0 0 '+w+' '+h+'" style="width:100%;height:150px" preserveAspectRatio="none">'+
+    '<polyline points="'+coords.join(' ')+'" fill="none" stroke="#388bfd" stroke-width="2"/>'+
+    '<circle cx="'+lastXY[0]+'" cy="'+lastXY[1]+'" r="3" fill="#25d366"/>'+
+    '</svg>';
+  el.innerHTML=svg+'<div style="display:flex;justify-content:space-between;color:#8b949e;font-size:11px;margin-top:4px">'+
+    '<span>'+fd(points[0].date)+' · '+minV+'</span><span>'+fd(last.date)+' · '+last.total+' membros</span></div>';
+}
+
 function buildCharts(){
   function barChart(elId,data,colorFn){
     const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
@@ -506,6 +571,8 @@ function buildCharts(){
       '<div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round(v.out/maxW*100)+'%;background:#f85149">🚪'+v.out+'</div></div>'+
       '</div></div>';
   }).join('');
+  buildHourlyChart();
+  buildMemberTimeline();
 }
 
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js');}
