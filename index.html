@@ -141,7 +141,8 @@ tr:hover td{background:#21262d40}
   <div style="flex:1">
     <h1>Compra Certa, Fatura Incerta</h1>
     <div class="sub">Atualizado em 07/07/2026 · Grupo criado em 09/05/2026</div>
-    <div class="sub" id="dash-check-info" style="margin-top:2px">🔄 Última verificação: 07/07 13:38 · checagem a cada 15 min</div><!--/dash-check-info-->
+    <div class="sub" id="dash-check-info" style="margin-top:2px">🔄 Última verificação: 07/07 13:40 · checagem a cada 15 min</div><!--/dash-check-info-->
+    <div class="sub" id="dash-countdown-wrap" style="margin-top:2px" data-iso="2026-07-07T16:40:31.960Z" data-interval="15">⏳ Próxima verificação em <span id="dash-countdown">--:--</span></div><!--/dash-countdown-wrap-->
   </div>
   <button class="logout-btn" onclick="doLogout()">Sair</button>
 </div>
@@ -228,7 +229,7 @@ tr:hover td{background:#21262d40}
 
 <!-- ENTRADAS -->
 <div id="tab-entradas" class="panel">
-  <div class="section"><h2>📥 Histórico de Entradas <span class="new-badge">+1 novas</span></h2>
+  <div class="section"><h2>📥 Histórico de Entradas <span class="new-badge">+0 novas</span></h2>
     <div class="search-row">
       <input class="sb" placeholder="🔍 Nome ou data..." oninput="filterEntradas()" id="se"/>
       <select class="sf" onchange="filterEntradas()" id="fe-mes">
@@ -533,6 +534,27 @@ function buildMemberTimeline(){
     '<span>'+fd(points[0].date)+' · '+minV+'</span><span>'+fd(last.date)+' · '+last.total+' membros</span></div>';
 }
 
+function initCountdown(){
+  const wrap=document.getElementById('dash-countdown-wrap');
+  const el=document.getElementById('dash-countdown');
+  if(!wrap||!el)return;
+  const iso=wrap.getAttribute('data-iso');
+  const interval=parseFloat(wrap.getAttribute('data-interval'))||15;
+  if(!iso)return;
+  const next=new Date(iso).getTime()+interval*60000;
+  function tick(){
+    const diff=next-Date.now();
+    if(diff<=0){el.textContent='verificando agora…';return;}
+    const totalSec=Math.floor(diff/1000);
+    const m=Math.floor(totalSec/60);
+    const s=totalSec%60;
+    el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  }
+  tick();
+  if(window.__dashCountdownTimer)clearInterval(window.__dashCountdownTimer);
+  window.__dashCountdownTimer=setInterval(tick,1000);
+}
+
 function buildCharts(){
   function barChart(elId,data,colorFn){
     const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
@@ -588,6 +610,7 @@ function initApp(){
   renderSaidas(SAIDAS);
   renderRetornos();
   buildCharts();
+  initCountdown();
 }
 </script>
 </body>
