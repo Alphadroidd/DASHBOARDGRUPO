@@ -1,7 +1,7 @@
 {
-  "name": "Compra Certa, Fatura Incerta",
-  "short_name": "CC Dashboard",
-  "description": "Dashboard do grupo de afiliados WhatsApp",
+  "name": "Monitor de Grupos WhatsApp",
+  "short_name": "Meus Grupos",
+  "description": "Dashboard de monitoramento de grupos WhatsApp",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0d1117",
@@ -21,6 +21,9 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "productivity"],
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "lang": "pt-BR"
 }
