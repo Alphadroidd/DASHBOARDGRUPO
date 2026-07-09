@@ -1,9 +1,5 @@
-const CACHE_NAME = 'ccfi-v1';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
-];
+const CACHE_NAME = 'ccfi-v2';
+const ASSETS = ['/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -22,9 +18,14 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const req = e.request;
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      return cached || fetch(e.request).catch(() => caches.match('/index.html'));
-    })
+    fetch(req)
+      .then(res => {
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(req, resClone)).catch(() => {});
+        return res;
+      })
+      .catch(() => caches.match(req).then(cached => cached || caches.match('/index.html')))
   );
 });
